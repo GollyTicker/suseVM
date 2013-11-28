@@ -1,0 +1,12 @@
+data/mmanage.h.i
+data/vmem.h.i
+data/Makefile.i
+data/mmanage.c.i
+data/vmaccess.c.i
+data/vmaccess.h.i
+data/vmappl.c.i
+data/vmappl.h.i
+data/.hgtags.i
+data/.indent.pro.i
+data/aufg3doku.tex.i
+data/Doxyfile.i
