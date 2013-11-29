@@ -21,4 +21,4 @@ mmanage: mmanage.o
 	$(CC) $(LDFLAGS) -o mmanage mmanage.o
 
 clean:
-	rm vmappl mmanage *.o logfile.txt pagefile.bin
+	rm -f vmappl mmanage *.o logfile.txt pagefile.bin

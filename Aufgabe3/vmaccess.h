@@ -7,6 +7,12 @@
 #ifndef VMACCESS_H
 #define VMACCESS_H
 
+// additional imports for debugging output
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 /** Connect to shared memory (key from vmem.h) */
 void vm_init(void);
 
@@ -15,5 +21,8 @@ int vmem_read(int address);
 
 /** Write data to "virtual" address */
 void vmem_write(int address, int data);
+
+// init the virtual memory and connect to shared memory  if not done yet
+void vm_init_if_not_ready();
 
 #endif

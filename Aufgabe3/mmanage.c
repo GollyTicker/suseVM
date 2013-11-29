@@ -19,7 +19,7 @@
 
 #include "mmanage.h"
 
-struct vmem_struct *vmem = NULL;
+struct vmem_struct *vmem = NULL;	// Shared Memory with vmaccess.c
 FILE *pagefile = NULL;
 FILE *logfile = NULL;
 int signal_number = 0;
@@ -30,6 +30,8 @@ int signal_number = 0;
 #ifdef DEBUG_MESSAGES
 #define DEBUG(A) (A)
 #endif
+
+// Usage: DEBUG(fprintf(stderr, "blubb bla bluff\n"));
 
 
 int main(void) {
