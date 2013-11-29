@@ -28,7 +28,7 @@ int main(void) {
     struct sigaction sigact;
 
     /* Init pagefile */
-    init_pagefile(MMANAGE_PFNAME);
+    init_pagefile();
 
     /* Open logfile */
     open_logfile();
@@ -72,32 +72,45 @@ int main(void) {
 #endif /* DEBUG_MESSAGES */
 
     /* Signal processing loop */
-    while(1) {
-        signal_number = 0;
-        pause();
-        if(signal_number == SIGUSR1) {  /* Page fault */
-#ifdef DEBUG_MESSAGES
-            fprintf(stderr, "Processed SIGUSR1\n");
-#endif /* DEBUG_MESSAGES */
-            signal_number = 0;
-        }
-        else if(signal_number == SIGUSR2) {     /* PT dump */
-#ifdef DEBUG_MESSAGES
-            fprintf(stderr, "Processed SIGUSR2\n");
-#endif /* DEBUG_MESSAGES */
-            signal_number = 0;
-        }
-        else if(signal_number == SIGINT) {
-#ifdef DEBUG_MESSAGES
-            fprintf(stderr, "Processed SIGINT\n");
-#endif /* DEBUG_MESSAGES */
-        }
-    }
-
-    return 0;
+    signal_proccessing_loop();
+    exit(EXIT_SUCCESS);
 }
 
 /* Your code goes here... */
+
+void signal_proccessing_loop(){
+    while(1) {
+	signal_number = 0;
+	pause();
+	if(signal_number == SIGUSR1) {  /* Page fault */
+	  char *msg = "Processed SIGUSR1\n";
+	  noticed(msg);
+	  // handle pagefault
+	  
+	}
+	else if(signal_number == SIGUSR2) {     /* PT dump */
+	  char *msg = "Processed SIGUSR2\n";
+	  noticed(msg);
+	  // TODO: dump pages
+	  
+	}
+	else if(signal_number == SIGINT) {
+	  char *msg = "Processed SIGINT\n";
+	  noticed(msg);
+	  // TODO: finalizese quiting
+	  
+	  printf("Finish!\n");
+	  break;
+	}
+    }
+}
+
+void noticed(char *msg) {
+#ifdef DEBUG_MESSAGES
+	fprintf(stderr, msg);
+#endif
+	signal_number = 0;
+}
 
 void sighandler(int signo) {
     // TODO: is this all to do here?
@@ -109,6 +122,7 @@ void sighandler(int signo) {
 
 void vmem_init(){
     // TODO: vmem_init();
+    vmem = 1;
     if(!vmem) {
         perror("Error initialising vmem");
         exit(EXIT_FAILURE);
@@ -122,6 +136,7 @@ void vmem_init(){
 
 void init_pagefile(){
     // TODO: init_pagefile(MMANAGE_PFNAME);
+    pagefile = 1;
     if(!pagefile) {
         perror("Error creating pagefile");
         exit(EXIT_FAILURE);

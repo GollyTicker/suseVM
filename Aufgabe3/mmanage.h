@@ -53,6 +53,10 @@ void dump_pt(void);
 
 void open_logfile();
 
+void signal_proccessing_loop();
+
+void noticed(char *msg);
+
 /** Misc */
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */
 #define MMANAGE_LOGFNAME "./logfile.txt"        /**< logfile name */

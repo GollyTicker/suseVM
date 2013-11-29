@@ -1,6 +1,6 @@
 CC := /usr/bin/gcc
 CCFLAGS := -Wall -std=c99 -DDEBUG_MESSAGES
-LDFLAGS :=
+LDFLAGS := -DDEBUG_MESSAGES
 SOURCE_FLAG := -D_XOPEN_SOURCE=600 #need because ipc.h require functions from XOPEN_SOURCE library
 
 all: vmappl mmanage
@@ -14,11 +14,11 @@ vmaccess.o: vmaccess.c vmaccess.h
 vmappl: vmaccess.o vmappl.o
 	$(CC) $(LDFLAGS) -o vmappl vmaccess.o vmappl.o
 
-mmanae.o: mmanage.c mmanage.h
-	$(CC) $(CCFLAGE) $(SOURCE_FLAG) -c -o mmanage.o mmanage.h
+mmanage.o: mmanage.c mmanage.h
+	$(CC) $(CCFLAGS) $(SOURCE_FLAG) -c -o mmanage.o mmanage.c
 
 mmanage: mmanage.o
 	$(CC) $(LDFLAGS) -o mmanage mmanage.o
 
 clean:
-	rm vmappl *.o
+	rm vmappl mmanage *.o logfile.txt pagefile.bin
