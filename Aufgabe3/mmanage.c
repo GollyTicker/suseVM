@@ -24,27 +24,17 @@ FILE *pagefile = NULL;
 FILE *logfile = NULL;
 int signal_number = 0;          /* Received signal */
 
-int
-main(void)
-{
+int main(void) {
     struct sigaction sigact;
 
     /* Init pagefile */
     init_pagefile(MMANAGE_PFNAME);
-    if(!pagefile) {
-        perror("Error creating pagefile");
-        exit(EXIT_FAILURE);
-    }
 
     /* Open logfile */
-    logfile = fopen(MMANAGE_LOGFNAME, "w");
-    if(!logfile) {
-        perror("Error creating logfile");
-        exit(EXIT_FAILURE);
-    }
+    open_logfile();
 
     /* Create shared memory and init vmem structure */
-    vmem_init_handle();
+    vmem_init();
 
     /* Setup signal handler */
     /* Handler for USR1 */
@@ -109,17 +99,33 @@ main(void)
 
 /* Your code goes here... */
 
-void vmem_init_handle(){
-    vmem_init();
-        if(!vmem) {
-            perror("Error initialising vmem");
-            exit(EXIT_FAILURE);
-        }
+void vmem_init(){
+    // TODO: vmem_init();
+    if(!vmem) {
+        perror("Error initialising vmem");
+        exit(EXIT_FAILURE);
+    }
 #ifdef DEBUG_MESSAGES
-        else {
-            fprintf(stderr, "vmem successfully created\n");
-        }
+    else {
+        fprintf(stderr, "vmem successfully created\n");
+    }
 #endif /* DEBUG_MESSAGES */
+}
+
+void init_pagefile(){
+    // TODO: init_pagefile(MMANAGE_PFNAME);
+    if(!pagefile) {
+        perror("Error creating pagefile");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void open_logfile(){
+    logfile = fopen(MMANAGE_LOGFNAME, "w");
+    if(!logfile) {
+        perror("Error creating logfile");
+        exit(EXIT_FAILURE);
+    }
 }
 
 /* Do not change!  */

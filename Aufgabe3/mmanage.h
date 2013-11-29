@@ -18,9 +18,6 @@ struct logevent {
     int g_count;
 };
 
-// Swaneet:
-void vmem_init_handle();
-
 /** Prototypes */
 void sighandler(int signo);
 
@@ -53,6 +50,8 @@ void cleanup(void);
 void logger(struct logevent le);
 
 void dump_pt(void);
+
+void open_logfile();
 
 /** Misc */
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */
