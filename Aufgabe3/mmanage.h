@@ -18,6 +18,9 @@ struct logevent {
     int g_count;
 };
 
+// Swaneet:
+void vmem_init_handle();
+
 /** Prototypes */
 void sighandler(int signo);
 

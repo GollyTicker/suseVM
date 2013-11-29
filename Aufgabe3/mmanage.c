@@ -44,16 +44,7 @@ main(void)
     }
 
     /* Create shared memory and init vmem structure */
-    vmem_init();
-    if(!vmem) {
-        perror("Error initialising vmem");
-        exit(EXIT_FAILURE);
-    }
-#ifdef DEBUG_MESSAGES
-    else {
-        fprintf(stderr, "vmem successfully created\n");
-    }
-#endif /* DEBUG_MESSAGES */
+    vmem_init_handle();
 
     /* Setup signal handler */
     /* Handler for USR1 */
@@ -118,7 +109,18 @@ main(void)
 
 /* Your code goes here... */
 
-
+void vmem_init_handle(){
+    vmem_init();
+        if(!vmem) {
+            perror("Error initialising vmem");
+            exit(EXIT_FAILURE);
+        }
+#ifdef DEBUG_MESSAGES
+        else {
+            fprintf(stderr, "vmem successfully created\n");
+        }
+#endif /* DEBUG_MESSAGES */
+}
 
 /* Do not change!  */
 void
