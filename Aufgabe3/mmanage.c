@@ -22,7 +22,15 @@
 struct vmem_struct *vmem = NULL;
 FILE *pagefile = NULL;
 FILE *logfile = NULL;
-int signal_number = 0;          /* Received signal */
+int signal_number = 0;
+#ifndef DEBUG_MESSAGES
+#define DEBUG(A) 
+#endif
+
+#ifdef DEBUG_MESSAGES
+#define DEBUG(A) (A)
+#endif
+
 
 int main(void) {
     struct sigaction sigact;
@@ -45,31 +53,25 @@ int main(void) {
         perror("Error installing signal handler for USR1");
         exit(EXIT_FAILURE);
     }
-#ifdef DEBUG_MESSAGES
     else {
-        fprintf(stderr, "USR1 handler successfully installed\n");
+        DEBUG(fprintf(stderr, "USR1 handler successfully installed\n"));
     }
-#endif
 
     if(sigaction(SIGUSR2, &sigact, NULL) == -1) {
         perror("Error installing signal handler for USR2");
         exit(EXIT_FAILURE);
     }
-#ifdef DEBUG_MESSAGES
     else {
-        fprintf(stderr, "USR2 handler successfully installed\n");
+        DEBUG(fprintf(stderr, "USR2 handler successfully installed\n"));
     }
-#endif /* DEBUG_MESSAGES */
 
     if(sigaction(SIGINT, &sigact, NULL) == -1) {
         perror("Error installing signal handler for INT");
         exit(EXIT_FAILURE);
     }
-#ifdef DEBUG_MESSAGES
     else {
-        fprintf(stderr, "INT handler successfully installed\n");
+        DEBUG(fprintf(stderr, "INT handler successfully installed\n"));
     }
-#endif /* DEBUG_MESSAGES */
 
     /* Signal processing loop */
     signal_proccessing_loop();
@@ -106,18 +108,14 @@ void signal_proccessing_loop(){
 }
 
 void noticed(char *msg) {
-#ifdef DEBUG_MESSAGES
-	fprintf(stderr, msg);
-#endif
+	DEBUG(fprintf(stderr, msg));
 	signal_number = 0;
 }
 
 void sighandler(int signo) {
     // TODO: is this all to do here?
     signal_number = signo;
-#ifdef DEBUG_MESSAGES
-    fprintf(stderr, "sighandler caught %d\n", signo);
-#endif /* DEBUG_MESSAGES */
+    DEBUG(fprintf(stderr, "sighandler caught %d \n", signo));
 }
 
 void vmem_init(){
@@ -127,11 +125,9 @@ void vmem_init(){
         perror("Error initialising vmem");
         exit(EXIT_FAILURE);
     }
-#ifdef DEBUG_MESSAGES
     else {
-        fprintf(stderr, "vmem successfully created\n");
+        DEBUG(fprintf(stderr, "vmem successfully created\n"));
     }
-#endif /* DEBUG_MESSAGES */
 }
 
 void init_pagefile(){
