@@ -2,17 +2,17 @@ CC := /usr/bin/gcc
 CCFLAGS := -pthread -g -lpthread -Wall -std=c99
 LDFLAGS := -pthread
 
-all: philosophen
+all: bin/vmappl #vmem
 
 
-main.o: main.c
-	$(CC) $(CCFLAGS) -c -o main.o main.c
+bin/vmappl.o: vmappl.c
+	$(CC) $(CCFLAGS) -c -o bin/vmappl.o vmappl.c
 
-monitor.o: monitor.c
-	$(CC) $(CCFLAGS) -c -o monitor.o monitor.c
+bin/vmaccess.o: vmaccess.c
+	$(CC) $(CCFLAGS) -c -o bin/vmaccess.o vmaccess.c
 
-philosophen: main.o monitor.o
-	$(CC) $(LDFLAGS) -o philosophen main.o monitor.o
-
-clean: 
-	rm philosophen main.o monitor.o
+bin/vmappl: bin/vmaccess.o bin/vmappl.o
+	$(CC) $(LDFLAGS) -o bin/vmappl bin/vmaccess.o bin/vmappl.o
+	
+clean:
+	rm bin/*
