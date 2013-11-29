@@ -5,6 +5,7 @@
  * This file gives the vmappl.c access to the virtual memory.
  */
 
+#include "vmaccess.h"
 
 // TODO: connect to shared memory
 
