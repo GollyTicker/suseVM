@@ -5,7 +5,6 @@ SOURCE_FLAG := -D_XOPEN_SOURCE=600 #need because ipc.h require functions from XO
 
 all: vmappl mmanage.o
 
-
 vmappl.o: vmappl.c vmappl.h
 	$(CC) $(CCFLAGS) -c -o vmappl.o vmappl.c
 

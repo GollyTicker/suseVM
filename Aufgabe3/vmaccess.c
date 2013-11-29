@@ -12,7 +12,6 @@
 
 int memory[550];
 
-
 int vmem_read(int address){
     return memory[address];
 }

@@ -19,7 +19,7 @@ struct logevent {
 };
 
 /** Prototypes */
-/* void sighandler(int signo);
+void sighandler(int signo);
 
 void vmem_init(void);
 
@@ -49,7 +49,7 @@ void cleanup(void);
 
 void logger(struct logevent le);
 
-void dump_pt(void);*/
+void dump_pt(void);
 
 /** Misc */
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */
