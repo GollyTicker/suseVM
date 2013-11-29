@@ -2,17 +2,20 @@ CC := /usr/bin/gcc
 CCFLAGS := -pthread -g -lpthread -Wall -std=c99
 LDFLAGS := -pthread
 
-all: bin/vmappl #vmem
+all: vmappl mmanage.o
 
 
-bin/vmappl.o: vmappl.c
-	$(CC) $(CCFLAGS) -c -o bin/vmappl.o vmappl.c
+vmappl.o: vmappl.c
+	$(CC) $(CCFLAGS) -c -o vmappl.o vmappl.c
 
-bin/vmaccess.o: vmaccess.c
-	$(CC) $(CCFLAGS) -c -o bin/vmaccess.o vmaccess.c
+vmaccess.o: vmaccess.c
+	$(CC) $(CCFLAGS) -c -o vmaccess.o vmaccess.c
 
-bin/vmappl: bin/vmaccess.o bin/vmappl.o
-	$(CC) $(LDFLAGS) -o bin/vmappl bin/vmaccess.o bin/vmappl.o
-	
+vmappl: vmaccess.o vmappl.o
+	$(CC) $(LDFLAGS) -o vmappl vmaccess.o vmappl.o
+
+mmanage.o: mmanage.c
+	$(CC) $(CCFLAGS) -c -o mmanage.o mmanage.c
+
 clean:
-	rm bin/*
+	rm vmappl *.o
