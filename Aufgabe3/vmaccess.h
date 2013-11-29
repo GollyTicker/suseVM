@@ -7,9 +7,6 @@
 #ifndef VMACCESS_H
 #define VMACCESS_H
 
-//Swaneet: i think this belongs here too:
-#include "vmem.h"
-
 /** Connect to shared memory (key from vmem.h) */
 void vm_init(void);
 
