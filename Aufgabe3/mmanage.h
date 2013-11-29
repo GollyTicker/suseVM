@@ -43,7 +43,7 @@ int search_bitmap(void);
 
 int find_free_bit(Bmword bmword, Bmword mask);
 
-void init_pagefile(const char *pfname);
+void init_pagefile();
 
 void cleanup(void);
 

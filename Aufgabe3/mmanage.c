@@ -49,7 +49,7 @@ int main(void) {
     else {
         fprintf(stderr, "USR1 handler successfully installed\n");
     }
-#endif /* DEBUG_MESSAGES */
+#endif
 
     if(sigaction(SIGUSR2, &sigact, NULL) == -1) {
         perror("Error installing signal handler for USR2");
@@ -98,6 +98,14 @@ int main(void) {
 }
 
 /* Your code goes here... */
+
+void sighandler(int signo) {
+    // TODO: is this all to do here?
+    signal_number = signo;
+#ifdef DEBUG_MESSAGES
+    fprintf(stderr, "sighandler caught %d\n", signo);
+#endif /* DEBUG_MESSAGES */
+}
 
 void vmem_init(){
     // TODO: vmem_init();
