@@ -1,0 +1,14 @@
+
+
+
+PROTOKOLL: TODO:
+
+alte git commits vor dem samstag durchgehen und hinzufügen
+
+
+
+Protokoll
+
+zuerst vmem.h ausführlich durchgehen und paralellenen zwischen
+dem theoretishcne Stoff aus der Vorlesung und den von
+Fohl zur Verfügung gestellten Datenstrukturen ziehen

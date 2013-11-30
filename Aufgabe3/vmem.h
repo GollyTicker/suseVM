@@ -24,46 +24,89 @@
 typedef unsigned int Bmword;    /* Frame bitmap */
 
 /* Sizes */
-#define VMEM_VIRTMEMSIZE 1024   /* Process address space / items */
-#define VMEM_PHYSMEMSIZE  128   /* Physical memory / items */
-#define VMEM_PAGESIZE       8   /* Items per page */
+#define VMEM_VIRTMEMSIZE 1024   /* Process address space / items */ // adressraum das den prozesen vorgegaukelt wird
+#define VMEM_PHYSMEMSIZE  128   /* Physical memory / items */   // unser Shared Memory(RAM)
+#define VMEM_PAGESIZE       8   /* Items per page */    // jede page hat 8 speicherstellen
 #define VMEM_NPAGES     (VMEM_VIRTMEMSIZE / VMEM_PAGESIZE)      /* Total 
                                                                    number 
                                                                    of
                                                                    pages 
                                                                  */
+                                                                 // Anzahl der Pages in unserem Prozessadressraum
 #define VMEM_NFRAMES (VMEM_PHYSMEMSIZE / VMEM_PAGESIZE) /* Number of
                                                            available
                                                            frames */
+                                                           // Anzahl der PAges im Shared Memory/RAM
+
+// ???
 #define VMEM_LASTBMMASK (~0U << (VMEM_NFRAMES % (sizeof(Bmword) * 8)))
 #define VMEM_BITS_PER_BMWORD     (sizeof(Bmword) * 8)	// size is 4
 #define VMEM_BMSIZE     ((VMEM_NFRAMES - 1) / VMEM_BITS_PER_BMWORD + 1)	// becomes 1
+// ???
 
 /* Page Table */
+// Pro Page wird in einem Int in den lowest vier
+// bits folgendes gespeichert
+
+// ist die page gerade im arbeitsspeicher?
 #define PTF_PRESENT     1
+
+// ??
 #define PTF_DIRTY       2       /* store: need to write */
+
+// CLOCK ALGO 1 und 2 - das USED BIT
 #define PTF_USED        4       /* For clock algo only */
+
+// CLOCK ALGO 2 - das zweite USED BIT
 #define PTF_USED1       8       /* For clock2 algo only */
 
+
+// ein eintrag in der Pagetable
+// gepeichert sind die flags(PRESENT, USEDBITS etc...)
+// sowie der index des dazugehoerigen Frames
+// falls die Page gerade  geladen ist.
 struct pt_entry {
     int flags;                  /* see defines above */
     int frame;                  /* Frame idx */
 };
 
+
+
+// administrative Struktur im Shared Memory
+// die wird zur Kommunikation zwischen
+// vmaccess.c und mmanage.c verwendet.
+// Vor dem sem_wait schreibt vmaccess.c
+// die Informationen (z.B. welhc ePage soll geladen werden)
+// in diese Struktur. mmanage.c wird dann
+// nachher diese Information lesen und entsprechend verarbeiten
 struct vmem_adm_struct {
+    
+    // Anzahl der besetzten Frames im RAM/Shared Memory
+    // beginnt bei 0 und geht im Laufe des Programms 0..1..2 .. VMEM_NFRAMES
     int size;
-    pid_t mmanage_pid;
+    
+    pid_t mmanage_pid;  // fuer den kill(pid, SIGUSR1) - Befehl
+    
+    // ?
     int shm_id;
+    
+    // Semaphor fuer das Warten beim Pagefault
     sem_t sema;                 /* Coordinate acces to shm */
     int req_pageno;             /* Number of requested page */
     int next_alloc_idx;         /* Next frame to allocate (FIFO, CLOCK) 
                                  */
     int pf_count;               /* Page fault counter */
+    
+    // ???????
     Bmword bitmap[VMEM_BMSIZE]; /* 0 = free */
 };
 
 struct pt_struct {
+    // dieses array ist das page table.
+    // zu jedem page gibt es den entsprchenden Eintrag(entry)
     struct pt_entry entries[VMEM_NPAGES];
+    
+    
     int framepage[VMEM_NFRAMES];        /* pages on frame */
 };
 
