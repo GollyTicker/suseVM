@@ -36,8 +36,8 @@ typedef unsigned int Bmword;    /* Frame bitmap */
                                                            available
                                                            frames */
 #define VMEM_LASTBMMASK (~0U << (VMEM_NFRAMES % (sizeof(Bmword) * 8)))
-#define VMEM_BITS_PER_BMWORD     (sizeof(Bmword) * 8)
-#define VMEM_BMSIZE     ((VMEM_NFRAMES - 1) / VMEM_BITS_PER_BMWORD + 1)
+#define VMEM_BITS_PER_BMWORD     (sizeof(Bmword) * 8)	// size is 4
+#define VMEM_BMSIZE     ((VMEM_NFRAMES - 1) / VMEM_BITS_PER_BMWORD + 1)	// becomes 1
 
 /* Page Table */
 #define PTF_PRESENT     1
