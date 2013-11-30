@@ -12,3 +12,12 @@ Protokoll
 zuerst vmem.h ausführlich durchgehen und paralellenen zwischen
 dem theoretishcne Stoff aus der Vorlesung und den von
 Fohl zur Verfügung gestellten Datenstrukturen ziehen
+-> Siehe Kommentare in vmem.h
+
+danach mmanage.h verstehen:
+
+
+
+TODO: Ablaufdiagramm schreiben/Pseudocode,
+        welches zeigt wer was wann wie macht
+    Orientierung an den Deklarationen von mmanage.h
