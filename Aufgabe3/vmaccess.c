@@ -6,14 +6,6 @@
  */
 
 #include "vmaccess.h"
-#include "vmem.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>        
-#include <fcntl.h> 
 
 // TODO: connect to shared memory
 
