@@ -107,6 +107,10 @@ void signal_proccessing_loop(){
 	  printf("Quit!\n");
 	  break;
 	}
+	else {
+	  DEBUG(fprintf(stderr, "Unknown Signal: %d\n", signal_number));
+	  signal_number = 0;
+	}
     }
 }
 
@@ -118,7 +122,7 @@ void noticed(char *msg) {
 void sighandler(int signo) {
     // TODO: is this all to do here?
     signal_number = signo;
-    DEBUG(fprintf(stderr, "sighandler caught %d \n", signo));
+    // DEBUG(fprintf(stderr, "sighandler caught %d \n", signo));
 }
 
 void vmem_init(){
