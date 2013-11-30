@@ -137,15 +137,15 @@ void vmem_init(){
     }
 }
 
-void init_pagefile(){
-    
-    // mit random fuellen
+void init_pagefile(const char *pfname) {
     int NoOfElements = VMEM_NPAGES*VMEM_PAGESIZE;
+    int data[NoOfElements];
+    // mit random fuellen. wir verwenden unser eigenes random mod
     for(int i=0; i < NoOfElements; i++) {
-		data[i] = rand() % MY_RANDOM_MOD;										
-	}
+	data[i] = rand() % MY_RANDOM_MOD;
+    }
     
-	pagefile = fopen(pfname, "w+b");
+    pagefile = fopen(pfname, "w+b");
     if(!pagefile) {
         perror("Error creating pagefile");
         exit(EXIT_FAILURE);
@@ -156,6 +156,7 @@ void init_pagefile(){
         perror("Error creating pagefile");
         exit(EXIT_FAILURE);
     }
+    DEBUG(fprintf(stderr, "Pagefile created!\n"));
 }
 
 void open_logfile(){
@@ -164,6 +165,7 @@ void open_logfile(){
         perror("Error creating logfile");
         exit(EXIT_FAILURE);
     }
+    DEBUG(fprintf(stderr, "Logfile created!\n"));
 }
 
 /* Do not change!  */
