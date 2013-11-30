@@ -10,14 +10,16 @@ alte git commits vor dem samstag durchgehen und hinzufügen
 Protokoll
 
 zuerst vmem.h ausführlich durchgehen und paralellenen zwischen
-dem theoretishcne Stoff aus der Vorlesung und den von
+dem theoretischen Stoff aus der Vorlesung und den von
 Fohl zur Verfügung gestellten Datenstrukturen ziehen
 -> Siehe Kommentare in vmem.h
 
 danach mmanage.h verstehen:
 
-
 SIGUSR1 wird von vmaccess.c aufgerufen
+
+with "killall -9 mmanage" werden alle
+vorher gestarteten Prozesse gestoppt
 
 wer ruft aber genau SIGUSR2 auf?
 sollenw ir es selber ab und zu aufrufen?

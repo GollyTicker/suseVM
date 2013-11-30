@@ -28,7 +28,34 @@ struct vmem_struct *vmem = NULL;	// Shared Memory with mmanager.c
 int memory[550];
 
 void vm_init(){
-    // DEBUG(fprintf(stderr, "vm_init();"));
+    // connect to shared memory
+    int fd = shm_open(SHMKEY, O_RDWR, S_IRUSR | S_IWUSR); 
+    if(!fd) {
+        perror("shm_open failed!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "shm_open succeeded.\n"));
+    }
+    
+    // Groesse des gesharten Memory setzten
+    if( ftruncate(fd, sizeof(struct vmem_struct)) == -1) {
+        perror("ftruncate failed!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "ftruncate succeeded.\n"));
+    }
+
+    // mach den Shared Memory unter vmem verfuegbar
+    vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if(!vmem) {
+        perror("mapping into vmem failed!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "mapping into vmem succeeded!\n"));
+    }
 }
 
 int vmem_read(int address){
@@ -44,7 +71,7 @@ void vmem_write(int address, int data){
 
 void vm_init_if_not_ready() {
     if(vmem == NULL) {
-	vm_init();
+        vm_init();
     }
 }
 

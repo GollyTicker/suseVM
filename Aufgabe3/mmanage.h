@@ -21,12 +21,19 @@ struct logevent {
     int g_count;
 };
 
+// before anything happens,
+// the main method here is called
+// which opens the pagefile and the logfile
+// initializes the virtual memory (shared memory)
+// and then wiats for the signals
+
 /** Prototypes */
 
 // nimmt die signale SIGUSR1 SIGUSR2 und SIGINT
 // and und schriebt sie in signal_number
 void sighandler(int signo);
 
+// initialize vmem structure
 void vmem_init(void);
 
 void allocate_page(void);
@@ -62,13 +69,17 @@ void cleanup(void);
 // log everthing given in this logevent
 void logger(struct logevent le);
 
-// show 
 void dump_pt(void);
 
+// open logfile
+// and fail if opening fails
 void open_logfile();
 
+// a loop which waits for signals and then processes them
 void signal_proccessing_loop();
 
+// print debug statement that we noticed a
+// signal and reset signal number
 void noticed(char *msg);
 
 /** Misc */
