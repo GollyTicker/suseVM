@@ -104,8 +104,9 @@ void signal_proccessing_loop(){
 	  char *msg = "Processed SIGINT\n";
 	  noticed(msg);
 	  // TODO: finalizese quiting
-	  
-	  printf("Finish!\n");
+	  fclose(logfile);
+	  fclose(pagefile);
+	  printf("Quit!\n");
 	  break;
 	}
     }
