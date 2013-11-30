@@ -2,10 +2,9 @@ CC=/usr/bin/gcc
 CFLAGS=-Wall
 LDFLAGS=-lrt
 
-CFLAGS += -DLFU
+CFLAGS += -DLFU -pthread
 #CFLAGS += -DFIFO
 #CFLAGS += -DCLOCK
-
 #CFLAGS += -DDEBUG_MESSAGES
 
 all: mmanage vmappl
