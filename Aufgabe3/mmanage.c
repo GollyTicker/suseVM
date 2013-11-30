@@ -83,6 +83,8 @@ int main(void) {
 /* Your code goes here... */
 
 void signal_proccessing_loop(){
+    DEBUG(fprintf(stderr, "Memory Manager: pid(%d)\n", getpid()));
+    DEBUG(fprintf(stderr, "Memory Manager running...\n"));
     while(1) {
 	signal_number = 0;
 	pause();
