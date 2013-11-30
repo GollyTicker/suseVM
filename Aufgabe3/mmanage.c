@@ -18,6 +18,14 @@
  * */
 
 #include "mmanage.h"
+#include "vmem.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>        
+#include <fcntl.h> 
 
 struct vmem_struct *vmem = NULL;	// Shared Memory with vmaccess.c
 FILE *pagefile = NULL;
