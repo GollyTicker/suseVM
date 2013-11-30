@@ -47,14 +47,22 @@ int find_remove_clock2(void);
 
 int search_bitmap(void);
 
+
+// ???!?
 int find_free_bit(Bmword bmword, Bmword mask);
 
+// opens pagefile and maybe fills
+// it with random data for easier debugging
 void init_pagefile();
 
+// destroy all data and structurs because
+// the process is ending
 void cleanup(void);
 
+// log everthing given in this logevent
 void logger(struct logevent le);
 
+// show 
 void dump_pt(void);
 
 void open_logfile();

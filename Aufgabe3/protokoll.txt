@@ -17,6 +17,10 @@ Fohl zur Verfügung gestellten Datenstrukturen ziehen
 danach mmanage.h verstehen:
 
 
+SIGUSR1 wird von vmaccess.c aufgerufen
+
+wer ruft aber genau SIGUSR2 auf?
+sollenw ir es selber ab und zu aufrufen?
 
 TODO: Ablaufdiagramm schreiben/Pseudocode,
         welches zeigt wer was wann wie macht
