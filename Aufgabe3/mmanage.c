@@ -103,7 +103,7 @@ void signal_proccessing_loop(){
 	  noticed(msg);
 	  // TODO: finalizese quiting
 	  fclose(logfile);
-	  fclose(pagefile);
+	  // fclose(pagefile);
 	  printf("Quit!\n");
 	  break;
 	}
