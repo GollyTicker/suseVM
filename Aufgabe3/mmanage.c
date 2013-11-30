@@ -131,50 +131,58 @@ void sighandler(int signo) {
 
 void vmem_init(){
     shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-	if(!shared_memory_file_desc) {
-		perror("Shared Memory creation failed!");
-        exit(EXIT_FAILURE);
-	}
-	if(ftruncate(shared_memory_file_desc, SHMSIZE) == -1) {
-		perror("Shared Memory creation(truncate) failed!");
-        exit(EXIT_FAILURE);
-	}
-    
-	vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
-	if(!vmem){
-		perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
-        exit(EXIT_FAILURE);
-	}
+    if(!shared_memory_file_desc) {
+	perror("Shared Memory creation failed!");
+	exit(EXIT_FAILURE);
+    }
+    if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
+	perror("Shared Memory creation(truncate) failed!");
+	exit(EXIT_FAILURE);
+    }
+
+    vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
+    if(!vmem){
+	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
+	exit(EXIT_FAILURE);
+    }
     DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
     
     // fill vmem with intial NULL-Data
-	vmem->adm.size = 0;										
-	vmem->adm.mmanage_pid = getpid();
-	vmem->adm.shm_id = VOID_IDX;
-	vmem->adm.req_pageno = VOID_IDX;
-	vmem->adm.next_alloc_idx = 0;
-	vmem->adm.pf_count = 0;
+    vmem->adm.size = 0;										
+    vmem->adm.mmanage_pid = getpid();
+    vmem->adm.shm_id = VOID_IDX;
+    vmem->adm.req_pageno = VOID_IDX;
+    vmem->adm.next_alloc_idx = 0;
+    vmem->adm.pf_count = 0;
+    
+    // Semaphor initialisieren
+    int sem = sem_init(&vmem->adm.sema, 0, 0);
+    if(sem != 0) {
+	perror("Semaphor initialization failed!");
+	exit(EXIT_FAILURE);
+    }
     
     // Page Tabke initialisieren
-    for(i=0; i<VMEM_NPAGES; i++) {
-		vmem->pt.entries[i].flags = 0;
-		// TODO: bruchst man dies hier wirklich?
-        // vmem->pt.entries[i].flags &= ~PTF_PRESENT;
-		// vmem->pt.entries[i].flags &= ~PTF_DIRTY;
-		// vmem->pt.entries[i].flags &= ~PTF_USED;
-        
-		vmem->pt.entries[i].frame = VOID_IDX;
-	}
-    
-	// Fragepage initialisieren
-	for(int i=0; i<VMEM_NFRAMES; i++) {
-		vmem->pt.framepage[i] = VOID_IDX;
-	}
+    for(int i=0; i<VMEM_NPAGES; i++) {
+	vmem->pt.entries[i].flags = 0;
 	
-	// data initialisieren
-	for(int i=0; i<(VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
-		vmem->data[i] = VOID_IDX;
-	}
+	// TODO: braucht man dies hier wirklich?
+	// vmem->pt.entries[i].flags &= ~PTF_PRESENT;
+	// vmem->pt.entries[i].flags &= ~PTF_DIRTY;
+	// vmem->pt.entries[i].flags &= ~PTF_USED;
+
+	vmem->pt.entries[i].frame = VOID_IDX;
+    }
+    
+    // Fragepage initialisieren
+    for(int i=0; i<VMEM_NFRAMES; i++) {
+	vmem->pt.framepage[i] = VOID_IDX;
+    }
+      
+    // data initialisieren
+    for(int i=0; i<(VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+	vmem->data[i] = VOID_IDX;
+    }
     
     DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
 }

@@ -1,7 +1,7 @@
 CC := /usr/bin/gcc
-CCFLAGS := -Wall -std=c99 -DDEBUG_MESSAGES
+CCFLAGS := -Wall -std=c99 -DDEBUG_MESSAGES -pthread
 LRT := -lrt # lrt -> for shared memory open
-LDFLAGS := -DDEBUG_MESSAGES
+LDFLAGS := -DDEBUG_MESSAGES -lpthread
 SOURCE_FLAGS := -D_XOPEN_SOURCE=600 #need because ipc.h require functions from XOPEN_SOURCE library
 
 all: vmappl mmanage
