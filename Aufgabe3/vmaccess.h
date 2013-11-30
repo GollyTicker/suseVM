@@ -7,11 +7,14 @@
 #ifndef VMACCESS_H
 #define VMACCESS_H
 
-// additional imports for debugging output
+#include "vmem.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>        
+#include <fcntl.h> 
 
 /** Connect to shared memory (key from vmem.h) */
 void vm_init(void);
