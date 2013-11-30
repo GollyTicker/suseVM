@@ -97,7 +97,7 @@ void signal_proccessing_loop(){
 	else if(signal_number == SIGUSR2) {     /* PT dump */
 	  char *msg = "Processed SIGUSR2\n";
 	  noticed(msg);
-	  // TODO: dump pages
+	  // TODO: dump vmem structure
 	  
 	}
 	else if(signal_number == SIGINT) {
@@ -122,9 +122,7 @@ void noticed(char *msg) {
 }
 
 void sighandler(int signo) {
-    // TODO: is this all to do here?
     signal_number = signo;
-    // DEBUG(fprintf(stderr, "sighandler caught %d \n", signo));
 }
 
 void vmem_init(){
