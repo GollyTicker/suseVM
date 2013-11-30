@@ -87,7 +87,6 @@ struct vmem_adm_struct {
     
     pid_t mmanage_pid;  // fuer den kill(pid, SIGUSR1) - Befehl
     
-    // ?
     int shm_id;
     
     // Semaphor fuer das Warten beim Pagefault

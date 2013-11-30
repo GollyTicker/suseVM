@@ -23,6 +23,10 @@ struct vmem_struct *vmem = NULL;	// Shared Memory with vmaccess.c
 FILE *pagefile = NULL;
 FILE *logfile = NULL;
 int signal_number = 0;
+
+// http://linux.die.net/man/3/shm_open
+int shared_memory_file_desc;
+
 #ifndef DEBUG_MESSAGES
 #define DEBUG(A) 
 #endif
@@ -126,15 +130,53 @@ void sighandler(int signo) {
 }
 
 void vmem_init(){
-    // TODO: vmem_init();
-    vmem = 1;
-    if(!vmem) {
-        perror("Error initialising vmem");
+    shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	if(!shared_memory_file_desc) {
+		perror("Shared Memory creation failed!");
         exit(EXIT_FAILURE);
-    }
-    else {
-        DEBUG(fprintf(stderr, "vmem successfully created\n"));
-    }
+	}
+	if(ftruncate(shared_memory_file_desc, SHMSIZE) == -1) {
+		perror("Shared Memory creation(truncate) failed!");
+        exit(EXIT_FAILURE);
+	}
+    
+	vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
+	if(!vmem){
+		perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
+        exit(EXIT_FAILURE);
+	}
+    DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
+    
+    // fill vmem with intial NULL-Data
+	vmem->adm.size = 0;										
+	vmem->adm.mmanage_pid = getpid();
+	vmem->adm.shm_id = VOID_IDX;
+	vmem->adm.req_pageno = VOID_IDX;
+	vmem->adm.next_alloc_idx = 0;
+	vmem->adm.pf_count = 0;
+    
+    // Page Tabke initialisieren
+    for(i=0; i<VMEM_NPAGES; i++) {
+		vmem->pt.entries[i].flags = 0;
+		// TODO: bruchst man dies hier wirklich?
+        // vmem->pt.entries[i].flags &= ~PTF_PRESENT;
+		// vmem->pt.entries[i].flags &= ~PTF_DIRTY;
+		// vmem->pt.entries[i].flags &= ~PTF_USED;
+        
+		vmem->pt.entries[i].frame = VOID_IDX;
+	}
+    
+	// Fragepage initialisieren
+	for(int i=0; i<VMEM_NFRAMES; i++) {
+		vmem->pt.framepage[i] = VOID_IDX;
+	}
+	
+	// data initialisieren
+	for(int i=0; i<(VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+		vmem->data[i] = VOID_IDX;
+	}
+    
+    DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
 }
 
 void init_pagefile(const char *pfname) {
