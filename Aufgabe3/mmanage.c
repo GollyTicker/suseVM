@@ -83,8 +83,6 @@ int main(void) {
 /* Your code goes here... */
 
 void signal_proccessing_loop(){
-    // DEBUG(fprintf(stderr,"size: %d",sizeof(Bmword)));
-    DEBUG(fprintf(stderr,"-->%d",VMEM_BMSIZE));
     while(1) {
 	signal_number = 0;
 	pause();
