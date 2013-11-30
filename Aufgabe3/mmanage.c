@@ -141,7 +141,7 @@ void init_pagefile(){
     
     // mit random fuellen
     int NoOfElements = VMEM_NPAGES*VMEM_PAGESIZE;
-    for(i=0; i < NoOfElements; i++) {
+    for(int i=0; i < NoOfElements; i++) {
 		data[i] = rand() % MY_RANDOM_MOD;										
 	}
     
