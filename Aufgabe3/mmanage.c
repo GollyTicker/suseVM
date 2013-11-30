@@ -101,6 +101,7 @@ void signal_proccessing_loop(){
 	else if(signal_number == SIGUSR2) {     /* PT dump */
 	  char *msg = "Processed SIGUSR2\n";
 	  noticed(msg);
+	  dump_vmem_structure();
 	  // TODO: dump vmem structure
 	  
 	}
@@ -163,7 +164,7 @@ void vmem_init(){
     }
     
     // Page Tabke initialisieren
-    for(int i=0; i<VMEM_NPAGES; i++) {
+    for(int i = 0; i < VMEM_NPAGES; i++) {
 	vmem->pt.entries[i].flags = 0;
 	
 	// TODO: braucht man dies hier wirklich?
@@ -175,16 +176,29 @@ void vmem_init(){
     }
     
     // Fragepage initialisieren
-    for(int i=0; i<VMEM_NFRAMES; i++) {
+    for(int i = 0; i < VMEM_NFRAMES; i++) {
 	vmem->pt.framepage[i] = VOID_IDX;
     }
       
     // data initialisieren
-    for(int i=0; i<(VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+    for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
 	vmem->data[i] = VOID_IDX;
     }
     
     DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
+}
+
+void dump_vmem_structure() {
+    // alle gespeicherten Daten ausgeben
+    DEBUG(fprintf(stderr, " <========== Data in vmem =========> \n"));
+    DEBUG(fprintf(stderr, "(index, data)\n"));
+    for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+	fprintf(stderr, "(%d, %d) \n", i, vmem->data[i]);
+    }
+    
+    DEBUG(fprintf(stderr, "Administrative Structures:\n"));
+    DEBUG(fprintf(stderr, "filled: %d, next_request: %d pf_count: %d",
+	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count));
 }
 
 void init_pagefile(const char *pfname) {

@@ -41,6 +41,8 @@ void sighandler(int signo);
 // initialize vmem structure
 void vmem_init(void);
 
+void dump_vmem_structure();
+
 void allocate_page(void);
 
 void fetch_page(int pt_idx);

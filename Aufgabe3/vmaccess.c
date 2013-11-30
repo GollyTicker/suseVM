@@ -72,6 +72,9 @@ void vmem_write(int address, int data){
 void vm_init_if_not_ready() {
     if(vmem == NULL) {
         vm_init();
+	
+	// make a dump after init
+	kill(vmem->adm.mmanage_pid, SIGUSR2);
     }
 }
 
