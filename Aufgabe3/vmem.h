@@ -106,17 +106,26 @@ struct pt_struct {
     // zu jedem page gibt es den entsprchenden Eintrag(entry)
     struct pt_entry entries[VMEM_NPAGES];
     
-    
+    // in dieser Tabelle steht, zu welchem
+    // Frame welche Page zugeordnet ist.
+    // Dies macht es insofern einfacher,
+    // da wir nun nicht ueber alle Pages iterieren muessen
+    // um zu einem Frame dessen Page zu finden.
     int framepage[VMEM_NFRAMES];        /* pages on frame */
 };
 
 /* This is to be located in shared memory */
+// Im shared memory sind daher einfach
+// das Pagetable, die administrative Struktur
+// und die derzeit geladenen zu finden.
 struct vmem_struct {
     struct vmem_adm_struct adm;
     struct pt_struct pt;
     int data[VMEM_NFRAMES * VMEM_PAGESIZE];
 };
 
+// Groesse der Shared Memory Struktur
+// fuer die initialisierung.
 #define SHMSIZE (sizeof(struct vmem_struct))
 
 #endif /* VMEM_H */

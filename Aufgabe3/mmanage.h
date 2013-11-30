@@ -10,6 +10,9 @@
 #include <limits.h>
 
 /** Event struct for logging */
+// Die zu loggenden Daten werden jedesmal
+// hier reingeschrieben bevordie
+// loggerfunktion aufgerufen wird.
 struct logevent {
     int req_pageno;
     int replaced_page;
@@ -19,6 +22,9 @@ struct logevent {
 };
 
 /** Prototypes */
+
+// nimmt die signale SIGUSR1 SIGUSR2 und SIGINT
+// and und schriebt sie in signal_number
 void sighandler(int signo);
 
 void vmem_init(void);
