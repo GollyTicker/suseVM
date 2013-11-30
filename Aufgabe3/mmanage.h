@@ -9,6 +9,11 @@
 #include "vmem.h"
 #include <limits.h>
 
+// imports fuer shared memory
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h> 
+
 /** Event struct for logging */
 // Die zu loggenden Daten werden jedesmal
 // hier reingeschrieben bevordie
@@ -83,6 +88,11 @@ void signal_proccessing_loop();
 void noticed(char *msg);
 
 /** Misc */
+
+// unser eigene randommod damit wir im
+// pagefile unsere eintraege unterscheiden koennen
+#define MY_RANDOM_MOD 50
+
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */
 #define MMANAGE_LOGFNAME "./logfile.txt"        /**< logfile name */
 

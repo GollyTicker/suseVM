@@ -138,9 +138,21 @@ void vmem_init(){
 }
 
 void init_pagefile(){
-    // TODO: init_pagefile(MMANAGE_PFNAME);
-    pagefile = 1;
+    
+    // mit random fuellen
+    int NoOfElements = VMEM_NPAGES*VMEM_PAGESIZE;
+    for(i=0; i < NoOfElements; i++) {
+		data[i] = rand() % MY_RANDOM_MOD;										
+	}
+    
+	pagefile = fopen(pfname, "w+b");
     if(!pagefile) {
+        perror("Error creating pagefile");
+        exit(EXIT_FAILURE);
+    }
+    
+    int writing_result = fwrite(data, sizeof(int), NoOfElements, pagefile);
+    if(!writing_result) {
         perror("Error creating pagefile");
         exit(EXIT_FAILURE);
     }
