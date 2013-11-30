@@ -65,7 +65,7 @@ int find_free_bit(Bmword bmword, Bmword mask);
 
 // opens pagefile and maybe fills
 // it with random data for easier debugging
-void init_pagefile();
+void init_pagefile(const char *pfname);
 
 // destroy all data and structurs because
 // the process is ending

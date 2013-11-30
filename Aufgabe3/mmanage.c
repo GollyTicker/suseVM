@@ -38,7 +38,7 @@ int main(void) {
     struct sigaction sigact;
 
     /* Init pagefile */
-    init_pagefile();
+    init_pagefile(MMANAGE_PFNAME);
 
     /* Open logfile */
     open_logfile();
