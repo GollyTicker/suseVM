@@ -159,12 +159,12 @@ void page_fault() {
     le.g_count = vmem->adm.pf_count;
     logger(le);
     
-    // DEBUG(fprintf(stderr, "almost fin\n"));
+    DEBUG(fprintf(stderr, "almost fin\n"));
+    
     
     // Den aufrufenden Freigeben
     sem_post(&vmem->adm.sema);
-    
-    // DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
+    DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
 }
 
 int vmem_is_full() {
@@ -227,8 +227,17 @@ int use_algorithm() {
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
     // naechsten index weiter rotieren
-    vmem->adm.next_alloc_idx %= (VMEM_NFRAMES-1);
+    end_reached(frame);
     return frame;
+}
+
+void end_reached(int alloc_idx) {
+    if(alloc_idx == (VMEM_NFRAMES -1)) { 
+	vmem->adm.next_alloc_idx = 0;
+    }
+    else {
+	vmem->adm.next_alloc_idx++;
+    }
 }
 
 int find_remove_clock();

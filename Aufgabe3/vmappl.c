@@ -12,7 +12,7 @@ main(void)
     int swaneettest = 1;
     if (swaneettest) {
 	// SWANEET TESTING
-	int max = 200;
+	int max = 150;
 	int accu = 1;
 	for(int i=0; i<max; i++) {
 	    vmem_write(i, i);
