@@ -120,8 +120,8 @@ void signal_proccessing_loop(){
 }
 
 void noticed(char *msg) {
-	DEBUG(fprintf(stderr, msg));
-	save_sig_no(0);
+    DEBUG(fprintf(stderr, msg));
+      save_sig_no(0);
 }
 
 void save_sig_no(int signo) {
@@ -198,7 +198,7 @@ int find_remove_frame(){
 	frame = vmem->adm.size;
     }
     else {
-    DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE"));
+	DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE"));
     }
     return frame;
 }

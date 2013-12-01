@@ -10,24 +10,25 @@ int
 main(void)
 {
     // SWANEET TESTING
-    int address = 14;
-    int data = 50;
-    vmem_write(address, data);
+    for(int i=0; i<100; i++) {
+	vmem_write(i, i);
+    }
     
+    int accu = 1;
+    for(int i=0; i<100; i++) {
+	if(i!=vmem_read(i)) {
+	    accu = 0;
+	    break;
+	}
+    }
     fprintf(stderr, "<======AFTER WRITING=====>!\n");
     dump();
     
-    int readtest = vmem_read(address);
-    
-    if(readtest == data){
+    if(accu){
 	fprintf(stderr, "Readtest Success!\n");
     }else{
 	fprintf(stderr, "Readtest Failed!\n");
     }
-   
-    fprintf(stderr, "wrote %d data to address %d with the read result %d\n", data, address, readtest);
-    
-    dump();
     // SWANEET TESTING
     
     /* Fill memory with pseudo-random data */
