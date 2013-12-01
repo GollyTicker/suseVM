@@ -2,11 +2,11 @@
 #include "test.h"
 
 int main(void){
-    dump();
     
     int address = 14;
     int data = 50;
-    vmem_write(address, data);  
+    vmem_write(address, data);
+    dump();  
     
     int readtest = vmem_read(address);
     
