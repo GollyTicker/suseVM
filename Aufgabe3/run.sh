@@ -2,15 +2,20 @@
 
 make clean
 make all
-./mmanage
+
+manage_map()
+{
+  if [ "$1" == "1" ] ; then
+    ./mmanage &
+    ./vmappl
+    killall -9 mmanage
+  fi
+}
 
 if [ $# -gt 0 ] ; then
-  if [ $1 -eq 1 ] ; then
-    ./vmappl
-    echo "Killing mmanage!"
-    killall -9 mmanage
-    echo "mmanage Killed!"
-  fi
+  manage_map
+else
+  ./mmanage
 fi
 
 echo "process finished!"
