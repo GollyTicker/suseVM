@@ -58,24 +58,77 @@ void vm_init(){
     }
 }
 
-int vmem_read(int address){
+int vmem_read(int address) {
     vm_init_if_not_ready();
-    return memory[address];
+    
+    // page und offset berechnen.
+    int page = address / VMEM_PAGESIZE;
+    int offset = address % VMEM_PAGESIZE;
+    
+    // verwendete page vermerken
+    // damit im Falle eines Pagefaults
+    // mmanage diese Page laden kann
+    vmem->adm.req_pageno = page;
+    
+    int flags = vmem->pt.entries[page].flags;
+    // check whether the page is currently loaded
+    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    if (req_page_is_loaded) {
+	return read_page(page, offset);
+    }
+    else {
+	DEBUG(fprintf(stderr, "dont come here!"));
+    }
+    return -1;
+    
+    // return memory[address];
 }
 
+int read_page(int page, int offset) {
+    int index = calcIndexFromPageOffset(page, offset);
+    return vmem->data[index];
+}
+
+int calcIndexFromPageOffset(int page, int offset) {
+    return vmem->pt.entries[page].frame*VMEM_PAGESIZE + offset;
+}
+
+void write_page(int page, int offset, int data) {
+    int index = calcIndexFromPageOffset(page, offset);
+    vmem->data[index] = data;
+}
 
 void vmem_write(int address, int data){
     vm_init_if_not_ready();
-    memory[address]=data;
+    
+    // page und offset berechnen.
+    int page = address / VMEM_PAGESIZE;
+    int offset = address % VMEM_PAGESIZE;
+    
+    // verwendete page vermerken
+    // damit im Falle eines Pagefaults
+    // mmanage diese Page laden kann
+    vmem->adm.req_pageno = page;
+    
+    int flags = vmem->pt.entries[page].flags;
+    // check whether the page is currently loaded
+    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    if (req_page_is_loaded) {
+	write_page(page, offset, data);
+    }
+    else {
+	DEBUG(fprintf(stderr, "dont come here!"));
+    }
 }
 
 void vm_init_if_not_ready() {
     if(vmem == NULL) {
         vm_init();
-	
-	// make a dump after init
-	kill(vmem->adm.mmanage_pid, SIGUSR2);
     }
+}
+
+void dump() {
+    kill(vmem->adm.mmanage_pid,SIGUSR2);
 }
 
 

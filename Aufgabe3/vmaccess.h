@@ -28,4 +28,11 @@ void vmem_write(int address, int data);
 // init the virtual memory and connect to shared memory  if not done yet
 void vm_init_if_not_ready();
 
+// send kill command to mmanage for debugging
+void dump();
+
+void write_page(int page, int offset, int data);
+int read_page(int page, int offset);
+int calcIndexFromPageOffset(int page, int offset);
+
 #endif
