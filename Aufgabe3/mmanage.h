@@ -51,7 +51,7 @@ void store_page(int pt_idx);
 
 void update_pt(int frame);
 
-int find_remove_frame(void);
+int find_remove_frame();
 
 int find_remove_fifo(void);
 

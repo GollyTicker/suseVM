@@ -133,28 +133,28 @@ void page_fault() {
     int new_frame = VOID_IDX;
     int req_page = vmem->adm.req_pageno;
     
-    DEBUF(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d", req_page));
+    DEBUG(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d", req_page));
     
     // Page fault aufgetreten
     vmem->adm.pf_count += 1;
     
-    frame = find_remove_frame();
+    new_frame = find_remove_frame();
     
-    page_unloaded = vmem->pt.framepage[frame];
+    page_unloaded = vmem->pt.framepage[new_frame];
     
     if( vmem_is_full() ) {
-	store_page(old_page);
+	store_page(page_unloaded);
     }
     
     fetch_page(req_page);
     
-    update_pt();
+    update_pt(new_frame);
     
     // make Logs
     struct logevent le;
     le.req_pageno = vmem->adm.req_pageno;
-    le.replaced_page = oldpage;
-    le.alloc_frame = frame;
+    le.replaced_page = page_unloaded;
+    le.alloc_frame = new_frame;
     le.pf_count = vmem->adm.pf_count;
     le.g_count = vmem->adm.pf_count;
     logger(le);
@@ -174,7 +174,18 @@ void store_page(int page) {
     fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
     int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
     if(written_ints != VMEM_PAGESIZE) {
-	perror("Not everyhting could be written into the page.");
+	perror("Not everything could be written into the page.");
+	exit(EXIT_FAILURE);
+    }
+}
+
+void fetch_page(int page) {
+    int frame = vmem->pt.entries[page].frame;
+    // scrool to the position to write into
+    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+    int written_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(written_ints != VMEM_PAGESIZE) {
+	perror("Not everything could be read!");
 	exit(EXIT_FAILURE);
     }
 }
@@ -182,7 +193,7 @@ void store_page(int page) {
 int find_remove_frame(){
     int frame = VOID_IDX;
     DEBUG(fprintf(stderr, "TODOOTOOFSDODOFOSDOFOSDFOSODOFOSDOFOSDOFO"));
-    if(!vmem_is_full) {
+    if(!vmem_is_full()) {
 	vmem->adm.size += 1;
 	frame = vmem->adm.size;
     }
@@ -195,6 +206,7 @@ int find_remove_frame(){
 void update_pt(int frame){
     
     // unset old page
+    int oldpage = vmem->pt.framepage[frame];
     update_unload(oldpage);
     
     // update loaded state
@@ -203,7 +215,7 @@ void update_pt(int frame){
 
 void update_unload(int oldpage) {
     // delete all flags
-    vmem->pt.entires[oldpage].flags = 0;
+    vmem->pt.entries[oldpage].flags = 0;
     
     // dazugehoerigen frame reference entfernen
     vmem->pt.entries[oldpage].frame = VOID_IDX;
