@@ -190,15 +190,16 @@ void vmem_init(){
 
 void dump_vmem_structure() {
     // alle gespeicherten Daten ausgeben
+    DEBUG(fprintf(stderr, " <========== DUMP OF VMEM =========> \n"));
+    DEBUG(fprintf(stderr, "Administrative Structures:\n"));
+    DEBUG(fprintf(stderr, "filled: %d, next_request: %d pf_count: %d\n",
+	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count));
     DEBUG(fprintf(stderr, " <========== Data in vmem =========> \n"));
     DEBUG(fprintf(stderr, "(index, data)\n"));
     for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
 	fprintf(stderr, "(%d, %d) \n", i, vmem->data[i]);
     }
     
-    DEBUG(fprintf(stderr, "Administrative Structures:\n"));
-    DEBUG(fprintf(stderr, "filled: %d, next_request: %d pf_count: %d",
-	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count));
 }
 
 void init_pagefile(const char *pfname) {
