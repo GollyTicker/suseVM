@@ -1,2 +1,5 @@
 *.o
 vmappl
+mmanage
+logfile.txt
+pagefile.bin
