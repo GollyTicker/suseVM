@@ -9,28 +9,27 @@
 int
 main(void)
 {
-    int swaneettest = 0;
+    int swaneettest = 1;
     if (swaneettest) {
 	// SWANEET TESTING
-	int max = LENGTH;
-	for(int i=0; i<max; i++) {
-	    vmem_write(i, i);
-	}
-	
+	int max = 200;
 	int accu = 1;
 	for(int i=0; i<max; i++) {
+	    vmem_write(i, i);
+	    printf("write: i: %d - ", i);
+	    printf("read: i: %d - ", i);
 	    if(i!=vmem_read(i)) {
 		accu = 0;
 		break;
 	    }
 	}
-	fprintf(stderr, "<======AFTER WRITING=====>!\n");
-	dump();
+	printf("<======AFTER WRITING=====>!\n");
+	// dump();
 	
 	if(accu){
-	    fprintf(stderr, "Readtest Success!\n");
+	    printf("Readtest Success!\n");
 	}else{
-	    fprintf(stderr, "Readtest Failed!\n");
+	    printf("Readtest Failed!\n");
 	}
 	// SWANEET TESTING
     }

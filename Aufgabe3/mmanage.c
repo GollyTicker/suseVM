@@ -137,7 +137,6 @@ void page_fault() {
     DEBUG(fprintf(stderr, "Pagefault: Requested Page: %d\n", req_page));
     
     vmem->adm.pf_count += 1;
-    DEBUG(fprintf(stderr, "Trace pf_count=%d\n", vmem->adm.pf_count));
     
     new_frame = find_remove_frame();
     
@@ -146,9 +145,7 @@ void page_fault() {
     if( vmem_is_full() ) {
 	store_page(page_unloaded);
     }
-    DEBUG(fprintf(stderr, "Trace pf_count=%d\n", vmem->adm.pf_count));
     update_pt(new_frame);
-    DEBUG(fprintf(stderr, "Trace pf_count=%d\n", vmem->adm.pf_count));
     
     fetch_page(req_page);
     
@@ -162,10 +159,12 @@ void page_fault() {
     le.g_count = vmem->adm.pf_count;
     logger(le);
     
-    DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
+    // DEBUG(fprintf(stderr, "almost fin\n"));
     
     // Den aufrufenden Freigeben
     sem_post(&vmem->adm.sema);
+    
+    // DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
 }
 
 int vmem_is_full() {
