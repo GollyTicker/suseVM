@@ -131,9 +131,90 @@ void save_sig_no(int signo) {
 void page_fault() {
     int page_unloaded = VOID_IDX;
     int new_frame = VOID_IDX;
+    int req_page = vmem->adm.req_pageno;
     
+    DEBUF(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d", req_page));
     
+    // Page fault aufgetreten
+    vmem->adm.pf_count += 1;
     
+    frame = find_remove_frame();
+    
+    page_unloaded = vmem->pt.framepage[frame];
+    
+    if( vmem_is_full() ) {
+	store_page(old_page);
+    }
+    
+    fetch_page(req_page);
+    
+    update_pt();
+    
+    // make Logs
+    struct logevent le;
+    le.req_pageno = vmem->adm.req_pageno;
+    le.replaced_page = oldpage;
+    le.alloc_frame = frame;
+    le.pf_count = vmem->adm.pf_count;
+    le.g_count = vmem->adm.pf_count;
+    logger(le);
+    
+    // Den aufrufenden Freigeben
+    sem_wait(&vmem->adm.sema);
+    DEBUG(fprintf(stderr, "Page loaded!"));
+}
+
+int vmem_is_full() {
+    return (vmem->adm.size >= VMEM_NFRAMES);
+}
+
+void store_page(int page) {
+    int frame = vmem->pt.entries[page].frame;
+    // scrool to the position to write into
+    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+    int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(written_ints != VMEM_PAGESIZE) {
+	perror("Not everyhting could be written into the page.");
+	exit(EXIT_FAILURE);
+    }
+}
+
+int find_remove_frame(){
+    int frame = VOID_IDX;
+    DEBUG(fprintf(stderr, "TODOOTOOFSDODOFOSDOFOSDFOSODOFOSDOFOSDOFO"));
+    if(!vmem_is_full) {
+	vmem->adm.size += 1;
+	frame = vmem->adm.size;
+    }
+    else {
+    DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE"));
+    }
+    return frame;
+}
+
+void update_pt(int frame){
+    
+    // unset old page
+    update_unload(oldpage);
+    
+    // update loaded state
+    update_load(frame);
+}
+
+void update_unload(int oldpage) {
+    // delete all flags
+    vmem->pt.entires[oldpage].flags = 0;
+    
+    // dazugehoerigen frame reference entfernen
+    vmem->pt.entries[oldpage].frame = VOID_IDX;
+    
+}
+
+void update_load(int frame) {
+    int req_page = vmem->adm.req_pageno;
+    vmem->pt.framepage[frame] = req_page;
+    vmem->pt.entries[req_page].frame = frame;
+    vmem->pt.entries[req_page].flags |= PTF_PRESENT;
 }
 
 void cleanup(){

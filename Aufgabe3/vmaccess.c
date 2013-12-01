@@ -100,9 +100,13 @@ void countUsed(int page) {
     // if USED bit 1 is already set, then set the second used bit.
     int used_1_is_set = vmem->pt.entries[page].flags & PTF_USED;
     if(used_1_is_set) {
-	vmem->pt.entries[page].flags|=PTF_USED1;
+	set_bits(&(vmem->pt.entries[page].flags), PTF_USED1);
     }
-    vmem->pt.entries[page].flags|=PTF_USED;
+    set_bits(&(vmem->pt.entries[page].flags), PTF_USED);
+}
+
+void set_bits(int *to_be_set, int bits) {
+    *(to_be_set) |= bits;
 }
 
 void vmem_write(int address, int data){

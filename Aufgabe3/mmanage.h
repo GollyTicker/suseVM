@@ -74,6 +74,8 @@ void init_pagefile(const char *pfname);
 // the process is ending
 void cleanup();
 
+int vmem_is_full();
+
 // log everthing given in this logevent
 void logger(struct logevent le);
 
@@ -89,6 +91,9 @@ void signal_proccessing_loop();
 // print debug statement that we noticed a
 // signal and reset signal number
 void noticed(char *msg);
+
+void update_load(int frame);
+void update_unload(int oldpage);
 
 /** Misc */
 
