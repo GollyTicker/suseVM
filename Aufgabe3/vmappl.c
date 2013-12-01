@@ -9,9 +9,9 @@
 int
 main(void)
 {
-    int swaneettest = 1;
-    if (swaneettest) {
-	// SWANEET TESTING
+    int test = 1;
+    if (test) {
+	// TESTING
 	int max = 150;
 	int accu = 1;
 	for(int i=0; i<max; i++) {
@@ -31,7 +31,7 @@ main(void)
 	}else{
 	    printf("Readtest Failed!\n");
 	}
-	// SWANEET TESTING
+	// TESTING
     }
     else {
 	/* Fill memory with pseudo-random data */

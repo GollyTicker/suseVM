@@ -302,15 +302,6 @@ int find_remove_clock2() {
 }
 
 void update_pt(int frame){
-    /*int oldpage = vmem->pt.framepage[frame];
-    vmem->pt.entries[oldpage].flags &= ~PTF_PRESENT;
-    vmem->pt.entries[oldpage].flags &= ~PTF_DIRTY;
-    vmem->pt.entries[oldpage].flags &= ~PTF_USED;
-    vmem->pt.entries[oldpage].frame  =  VOID_IDX;
-
-    vmem->pt.framepage[frame] = vmem->adm.req_pageno;
-    vmem->pt.entries[vmem->adm.req_pageno].frame = frame;
-    vmem->pt.entries[vmem->adm.req_pageno].flags |= PTF_PRESENT;*/
     // unset old page
     int oldpage = vmem->pt.framepage[frame];
     DEBUG(fprintf(stderr, "Update Table: Oldpage: %d OldFrame: %d\n", oldpage, frame));
