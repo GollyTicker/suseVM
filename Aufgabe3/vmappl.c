@@ -9,7 +9,7 @@
 int
 main(void)
 {
-    int swaneettest = 0;
+    int swaneettest = 1;
     if (swaneettest) {
 	// SWANEET TESTING
 	int max = 150;
