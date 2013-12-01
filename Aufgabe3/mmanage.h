@@ -36,7 +36,7 @@ struct logevent {
 
 // nimmt die signale SIGUSR1 SIGUSR2 und SIGINT
 // and und schriebt sie in signal_number
-void sighandler(int signo);
+void save_sig_no(int signo);
 
 // initialize vmem structure
 void vmem_init(void);
@@ -61,6 +61,7 @@ int find_remove_clock2(void);
 
 int search_bitmap(void);
 
+void page_fault();
 
 // ???!?
 int find_free_bit(Bmword bmword, Bmword mask);

@@ -52,7 +52,7 @@ int main(void) {
 
     /* Setup signal handler */
     /* Handler for USR1 */
-    sigact.sa_handler = sighandler;
+    sigact.sa_handler = save_sig_no;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     if(sigaction(SIGUSR1, &sigact, NULL) == -1) {
@@ -95,7 +95,8 @@ void signal_proccessing_loop(){
 	if(signal_number == SIGUSR1) {  /* Page fault */
 	  char *msg = "Processed SIGUSR1\n";
 	  noticed(msg);
-	  // handle pagefault
+	  
+	  page_fault();
 	  
 	}
 	else if(signal_number == SIGUSR2) {     /* PT dump */
@@ -108,24 +109,31 @@ void signal_proccessing_loop(){
 	else if(signal_number == SIGINT) {
 	  char *msg = "Processed SIGINT\n";
 	  noticed(msg);
-	  // TODO: finalizese quiting
 	  cleanup();
 	  break;
 	}
 	else {
 	  DEBUG(fprintf(stderr, "Unknown Signal: %d\n", signal_number));
-	  signal_number = 0;
+	  save_sig_no(0);
 	}
     }
 }
 
 void noticed(char *msg) {
 	DEBUG(fprintf(stderr, msg));
-	signal_number = 0;
+	save_sig_no(0);
 }
 
-void sighandler(int signo) {
+void save_sig_no(int signo) {
     signal_number = signo;
+}
+
+void page_fault() {
+    int page_unloaded = VOID_IDX;
+    int new_frame = VOID_IDX;
+    
+    
+    
 }
 
 void cleanup(){

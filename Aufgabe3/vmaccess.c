@@ -81,6 +81,7 @@ int vmem_read(int address) {
 }
 
 int read_page(int page, int offset) {
+    countUsed(page);
     int index = calcIndexFromPageOffset(page, offset);
     return vmem->data[index];
 }
@@ -90,8 +91,18 @@ int calcIndexFromPageOffset(int page, int offset) {
 }
 
 void write_page(int page, int offset, int data) {
+    countUsed(page);
     int index = calcIndexFromPageOffset(page, offset);
     vmem->data[index] = data;
+}
+
+void countUsed(int page) {
+    // if USED bit 1 is already set, then set the second used bit.
+    int used_1_is_set = vmem->pt.entries[page].flags & PTF_USED;
+    if(used_1_is_set) {
+	vmem->pt.entries[page].flags|=PTF_USED1;
+    }
+    vmem->pt.entries[page].flags|=PTF_USED;
 }
 
 void vmem_write(int address, int data){
