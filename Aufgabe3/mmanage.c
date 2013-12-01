@@ -110,7 +110,6 @@ void signal_proccessing_loop(){
 	  noticed(msg);
 	  // TODO: finalizese quiting
 	  cleanup();
-	  printf("Quit!\n");
 	  break;
 	}
 	else {
@@ -138,6 +137,8 @@ void cleanup(){
     // dateien schliesen
     fclose(logfile);
     fclose(pagefile);
+    
+    DEBUG(printf("Quit!\n"));
 }
 
 void vmem_init(){
