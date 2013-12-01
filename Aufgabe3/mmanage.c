@@ -133,10 +133,11 @@ void page_fault() {
     int new_frame = VOID_IDX;
     int req_page = vmem->adm.req_pageno;
     
-    DEBUG(fprintf(stderr, "Pagefault aufgetuacht: Requested Page: %d\n", req_page));
-    
     // Page fault aufgetreten
+    DEBUG(fprintf(stderr, "Pagefault: Requested Page: %d\n", req_page));
+    
     vmem->adm.pf_count += 1;
+    DEBUG(fprintf(stderr, "Trace pf_count=%d\n", vmem->adm.pf_count));
     
     new_frame = find_remove_frame();
     
@@ -145,7 +146,9 @@ void page_fault() {
     if( vmem_is_full() ) {
 	store_page(page_unloaded);
     }
+    DEBUG(fprintf(stderr, "Trace pf_count=%d\n", vmem->adm.pf_count));
     update_pt(new_frame);
+    DEBUG(fprintf(stderr, "Trace pf_count=%d\n", vmem->adm.pf_count));
     
     fetch_page(req_page);
     
@@ -159,9 +162,10 @@ void page_fault() {
     le.g_count = vmem->adm.pf_count;
     logger(le);
     
+    DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
+    
     // Den aufrufenden Freigeben
     sem_post(&vmem->adm.sema);
-    DEBUG(fprintf(stderr, "Page loaded!\n"));
 }
 
 int vmem_is_full() {
@@ -223,7 +227,7 @@ int use_algorithm() {
 
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
-    // naechten index weiter rotieren
+    // naechsten index weiter rotieren
     vmem->adm.next_alloc_idx %= (VMEM_NFRAMES-1);
     return frame;
 }
@@ -233,9 +237,9 @@ int find_remove_clock();
 int find_remove_clock2();
 
 void update_pt(int frame){
-    DEBUG(fprintf(stderr, "update_pagetable frame: %d\n", frame));
     // unset old page
     int oldpage = vmem->pt.framepage[frame];
+    DEBUG(fprintf(stderr, "Update Table: Oldpage: %d OldFrame: %d\n", oldpage, frame));
     update_unload(oldpage);
     
     // update loaded state

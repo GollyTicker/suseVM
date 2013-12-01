@@ -82,7 +82,7 @@ int vmem_read(int address) {
 int read_page(int page, int offset) {
     countUsed(page);
     int index = calcIndexFromPageOffset(page, offset);
-    DEBUG(fprintf(stderr, "Reading: Page: %d Offset: %d\n", page, offset));
+    // DEBUG(fprintf(stderr, "Reading: Page: %d Offset: %d\n", page, offset));
     return vmem->data[index];
 }
 
@@ -93,7 +93,7 @@ int calcIndexFromPageOffset(int page, int offset) {
 void write_page(int page, int offset, int data) {
     countUsed(page);
     int index = calcIndexFromPageOffset(page, offset);
-    DEBUG(fprintf(stderr, "Write: Page: %d Offset: %d Data: %d\n", page, offset, data));
+    // DEBUG(fprintf(stderr, "Write: Page: %d Offset: %d Data: %d\n", page, offset, data));
     vmem->data[index] = data;
 }
 

@@ -9,45 +9,48 @@
 int
 main(void)
 {
-    // SWANEET TESTING
-    int max = 150;
-    for(int i=0; i<max; i++) {
-	vmem_write(i, i);
-    }
-    
-    int accu = 1;
-    for(int i=0; i<max; i++) {
-	if(i!=vmem_read(i)) {
-	    accu = 0;
-	    break;
+    int swaneettest = 0;
+    if (swaneettest) {
+	// SWANEET TESTING
+	int max = LENGTH;
+	for(int i=0; i<max; i++) {
+	    vmem_write(i, i);
 	}
+	
+	int accu = 1;
+	for(int i=0; i<max; i++) {
+	    if(i!=vmem_read(i)) {
+		accu = 0;
+		break;
+	    }
+	}
+	fprintf(stderr, "<======AFTER WRITING=====>!\n");
+	dump();
+	
+	if(accu){
+	    fprintf(stderr, "Readtest Success!\n");
+	}else{
+	    fprintf(stderr, "Readtest Failed!\n");
+	}
+	// SWANEET TESTING
     }
-    fprintf(stderr, "<======AFTER WRITING=====>!\n");
-    dump();
-    
-    if(accu){
-	fprintf(stderr, "Readtest Success!\n");
-    }else{
-	fprintf(stderr, "Readtest Failed!\n");
+    else {
+	/* Fill memory with pseudo-random data */
+	init_data(LENGTH);
+
+	/* Display unsorted */
+	printf("\nUnsorted:\n");
+	display_data(LENGTH);
+
+	/* Sort */
+	printf("\nSorting:\n");
+	sort(LENGTH);
+
+	/* Display sorted */
+	printf("\nSorted:\n");
+	display_data(LENGTH);
+	printf("\n");
     }
-    // SWANEET TESTING
-    
-    /* Fill memory with pseudo-random data */
-    // init_data(LENGTH);
-
-    /* Display unsorted */
-    // printf("\nUnsorted:\n");
-    // display_data(LENGTH);
-
-    /* Sort */
-    // printf("\nSorting:\n");
-    // sort(LENGTH);
-
-    /* Display sorted */
-    // printf("\nSorted:\n");
-    // display_data(LENGTH);
-    // printf("\n");
-
     return 0;
 }
 
