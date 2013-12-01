@@ -136,7 +136,7 @@ void page_fault() {
     // Page fault aufgetreten
     DEBUG(fprintf(stderr, "Pagefault: Requested Page: %d\n", req_page));
     
-    vmem->adm.pf_count += 1;
+    vmem->adm.pf_count++;
     
     new_frame = find_remove_frame();
     
@@ -227,11 +227,11 @@ int use_algorithm() {
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
     // naechsten index weiter rotieren
-    end_reached(frame);
+    increment_alloc_idx(frame);
     return frame;
 }
 
-void end_reached(int alloc_idx) {
+void increment_alloc_idx(int alloc_idx) {
     if(alloc_idx == (VMEM_NFRAMES -1)) { 
 	vmem->adm.next_alloc_idx = 0;
     }
@@ -240,9 +240,66 @@ void end_reached(int alloc_idx) {
     }
 }
 
-int find_remove_clock();
+int find_remove_clock() {
+    int frame;
+    int done = 0;
+    
+    while(!done) {
+	int alloc_idx = vmem->adm.next_alloc_idx;
+	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
+	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
+	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
+	
+	if(is_frame_flag_used) {	// if frame is used. unset it and continue to next.
+	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
+	    increment_alloc_idx(alloc_idx);
+	}
+	else {
+	    frame = alloc_idx;
+	    done = 1;
+	}
+    }
+    increment_alloc_idx(vmem->adm.next_alloc_idx);
+    
+    return frame;
+}
 
-int find_remove_clock2();
+int find_remove_clock2() {
+    int frame;
+    int done = 0;
+    
+    while(!done) {
+	int alloc_idx = vmem->adm.next_alloc_idx;
+	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
+	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
+	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
+	
+	// falls das used bit gesetzt ist. dann veringerre es (oder das zweite used bit)
+	// sonst nehme diesen frame
+	if(is_frame_flag_used) {
+	    int is_second_frame_flag_used = (flags & PTF_USED1) == PTF_USED1;
+	    // falls auch das zweite gesetzt ist,
+	    // dann loesche das zweite bit. sonst loesche das erste bit
+	    if( is_second_frame_flag_used ) {
+		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED1;
+	    }
+	    else {
+		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
+	    }
+	    
+	    // counter erhoehen, um
+	    // in der naechsten iteration den naechsten frame zu  betrachten
+	    increment_alloc_idx(alloc_idx);
+	}
+	else {
+	    frame = alloc_idx;
+	    done = 1;
+	}
+    }
+    increment_alloc_idx(vmem->adm.next_alloc_idx);
+    
+    return frame;
+}
 
 void update_pt(int frame){
     // unset old page

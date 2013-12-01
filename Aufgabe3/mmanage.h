@@ -65,7 +65,7 @@ int search_bitmap(void);
 
 void page_fault();
 
-void end_reached(int alloc_idx);
+void increment_alloc_idx(int alloc_idx);
 
 // ???!?
 int find_free_bit(Bmword bmword, Bmword mask);
