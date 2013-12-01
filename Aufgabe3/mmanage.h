@@ -36,7 +36,7 @@ struct logevent {
 
 // nimmt die signale SIGUSR1 SIGUSR2 und SIGINT
 // and und schriebt sie in signal_number
-void sighandler(int signo);
+void save_sig_no(int signo);
 
 // initialize vmem structure
 void vmem_init(void);
@@ -51,7 +51,7 @@ void store_page(int pt_idx);
 
 void update_pt(int frame);
 
-int find_remove_frame(void);
+int find_remove_frame();
 
 int find_remove_fifo(void);
 
@@ -61,6 +61,7 @@ int find_remove_clock2(void);
 
 int search_bitmap(void);
 
+void page_fault();
 
 // ???!?
 int find_free_bit(Bmword bmword, Bmword mask);
@@ -72,6 +73,8 @@ void init_pagefile(const char *pfname);
 // destroy all data and structurs because
 // the process is ending
 void cleanup();
+
+int vmem_is_full();
 
 // log everthing given in this logevent
 void logger(struct logevent le);
@@ -88,6 +91,9 @@ void signal_proccessing_loop();
 // print debug statement that we noticed a
 // signal and reset signal number
 void noticed(char *msg);
+
+void update_load(int frame);
+void update_unload(int oldpage);
 
 /** Misc */
 

@@ -31,6 +31,10 @@ void vm_init_if_not_ready();
 // send kill command to mmanage for debugging
 void dump();
 
+void countUsed(int page);
+
+void set_bits(int *to_be_set, int bits);
+
 void write_page(int page, int offset, int data);
 int read_page(int page, int offset);
 int calcIndexFromPageOffset(int page, int offset);

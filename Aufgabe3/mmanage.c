@@ -52,7 +52,7 @@ int main(void) {
 
     /* Setup signal handler */
     /* Handler for USR1 */
-    sigact.sa_handler = sighandler;
+    sigact.sa_handler = save_sig_no;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     if(sigaction(SIGUSR1, &sigact, NULL) == -1) {
@@ -95,7 +95,8 @@ void signal_proccessing_loop(){
 	if(signal_number == SIGUSR1) {  /* Page fault */
 	  char *msg = "Processed SIGUSR1\n";
 	  noticed(msg);
-	  // handle pagefault
+	  
+	  page_fault();
 	  
 	}
 	else if(signal_number == SIGUSR2) {     /* PT dump */
@@ -108,24 +109,124 @@ void signal_proccessing_loop(){
 	else if(signal_number == SIGINT) {
 	  char *msg = "Processed SIGINT\n";
 	  noticed(msg);
-	  // TODO: finalizese quiting
 	  cleanup();
 	  break;
 	}
 	else {
 	  DEBUG(fprintf(stderr, "Unknown Signal: %d\n", signal_number));
-	  signal_number = 0;
+	  save_sig_no(0);
 	}
     }
 }
 
 void noticed(char *msg) {
 	DEBUG(fprintf(stderr, msg));
-	signal_number = 0;
+	save_sig_no(0);
 }
 
-void sighandler(int signo) {
+void save_sig_no(int signo) {
     signal_number = signo;
+}
+
+void page_fault() {
+    int page_unloaded = VOID_IDX;
+    int new_frame = VOID_IDX;
+    int req_page = vmem->adm.req_pageno;
+    
+    DEBUG(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d", req_page));
+    
+    // Page fault aufgetreten
+    vmem->adm.pf_count += 1;
+    
+    new_frame = find_remove_frame();
+    
+    page_unloaded = vmem->pt.framepage[new_frame];
+    
+    if( vmem_is_full() ) {
+	store_page(page_unloaded);
+    }
+    
+    fetch_page(req_page);
+    
+    update_pt(new_frame);
+    
+    // make Logs
+    struct logevent le;
+    le.req_pageno = vmem->adm.req_pageno;
+    le.replaced_page = page_unloaded;
+    le.alloc_frame = new_frame;
+    le.pf_count = vmem->adm.pf_count;
+    le.g_count = vmem->adm.pf_count;
+    logger(le);
+    
+    // Den aufrufenden Freigeben
+    sem_wait(&vmem->adm.sema);
+    DEBUG(fprintf(stderr, "Page loaded!"));
+}
+
+int vmem_is_full() {
+    return (vmem->adm.size >= VMEM_NFRAMES);
+}
+
+void store_page(int page) {
+    int frame = vmem->pt.entries[page].frame;
+    // scrool to the position to write into
+    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+    int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(written_ints != VMEM_PAGESIZE) {
+	perror("Not everything could be written into the page.");
+	exit(EXIT_FAILURE);
+    }
+}
+
+void fetch_page(int page) {
+    int frame = vmem->pt.entries[page].frame;
+    // scrool to the position to write into
+    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+    int written_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(written_ints != VMEM_PAGESIZE) {
+	perror("Not everything could be read!");
+	exit(EXIT_FAILURE);
+    }
+}
+
+int find_remove_frame(){
+    int frame = VOID_IDX;
+    DEBUG(fprintf(stderr, "TODOOTOOFSDODOFOSDOFOSDFOSODOFOSDOFOSDOFO"));
+    if(!vmem_is_full()) {
+	vmem->adm.size += 1;
+	frame = vmem->adm.size;
+    }
+    else {
+    DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE"));
+    }
+    return frame;
+}
+
+void update_pt(int frame){
+    
+    // unset old page
+    int oldpage = vmem->pt.framepage[frame];
+    update_unload(oldpage);
+    
+    // update loaded state
+    update_load(frame);
+}
+
+void update_unload(int oldpage) {
+    // delete all flags
+    vmem->pt.entries[oldpage].flags = 0;
+    
+    // dazugehoerigen frame reference entfernen
+    vmem->pt.entries[oldpage].frame = VOID_IDX;
+    
+}
+
+void update_load(int frame) {
+    int req_page = vmem->adm.req_pageno;
+    vmem->pt.framepage[frame] = req_page;
+    vmem->pt.entries[req_page].frame = frame;
+    vmem->pt.entries[req_page].flags |= PTF_PRESENT;
 }
 
 void cleanup(){
