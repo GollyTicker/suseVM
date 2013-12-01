@@ -71,7 +71,7 @@ void init_pagefile(const char *pfname);
 
 // destroy all data and structurs because
 // the process is ending
-void cleanup(void);
+void cleanup();
 
 // log everthing given in this logevent
 void logger(struct logevent le);

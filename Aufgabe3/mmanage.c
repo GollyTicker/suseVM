@@ -101,16 +101,15 @@ void signal_proccessing_loop(){
 	else if(signal_number == SIGUSR2) {     /* PT dump */
 	  char *msg = "Processed SIGUSR2\n";
 	  noticed(msg);
+	  
 	  dump_vmem_structure();
-	  // TODO: dump vmem structure
 	  
 	}
 	else if(signal_number == SIGINT) {
 	  char *msg = "Processed SIGINT\n";
 	  noticed(msg);
 	  // TODO: finalizese quiting
-	  fclose(logfile);
-	  // fclose(pagefile);
+	  cleanup();
 	  printf("Quit!\n");
 	  break;
 	}
@@ -128,6 +127,17 @@ void noticed(char *msg) {
 
 void sighandler(int signo) {
     signal_number = signo;
+}
+
+void cleanup(){
+    // shared memory löschen
+    munmap(vmem, SHMSIZE);
+    close(shared_memory_file_desc);
+    shm_unlink(SHMKEY);
+    
+    // dateien schliesen
+    fclose(logfile);
+    fclose(pagefile);
 }
 
 void vmem_init(){

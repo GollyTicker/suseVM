@@ -36,7 +36,7 @@ void vm_init(){
     
     // Groesse des gesharten Memory setzten
     if( ftruncate(fd, sizeof(struct vmem_struct)) == -1) {
-        perror("ftruncate failed!\n");
+        perror("ftruncate failed! Make sure ./mmanage is running!\n");
         exit(EXIT_FAILURE);
     }
     else {
