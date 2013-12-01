@@ -13,7 +13,9 @@ main(void)
     int address = 14;
     int data = 50;
     vmem_write(address, data);
-    dump();  
+    
+    fprintf(stderr, "<======AFTER WRITING=====>!\n");
+    dump();
     
     int readtest = vmem_read(address);
     
@@ -23,26 +25,26 @@ main(void)
 	fprintf(stderr, "Readtest Failed!\n");
     }
    
-    fprintf(stderr, "wrote %d data to address %d with the read result %d", data, address, readtest);
+    fprintf(stderr, "wrote %d data to address %d with the read result %d\n", data, address, readtest);
     
     dump();
     // SWANEET TESTING
     
     /* Fill memory with pseudo-random data */
-    init_data(LENGTH);
+    // init_data(LENGTH);
 
     /* Display unsorted */
-    printf("\nUnsorted:\n");
-    display_data(LENGTH);
+    // printf("\nUnsorted:\n");
+    // display_data(LENGTH);
 
     /* Sort */
-    printf("\nSorting:\n");
-    sort(LENGTH);
+    // printf("\nSorting:\n");
+    // sort(LENGTH);
 
     /* Display sorted */
-    printf("\nSorted:\n");
-    display_data(LENGTH);
-    printf("\n");
+    // printf("\nSorted:\n");
+    // display_data(LENGTH);
+    // printf("\n");
 
     return 0;
 }

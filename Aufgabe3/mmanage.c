@@ -101,17 +101,15 @@ void signal_proccessing_loop(){
 	else if(signal_number == SIGUSR2) {     /* PT dump */
 	  char *msg = "Processed SIGUSR2\n";
 	  noticed(msg);
+	  
 	  dump_vmem_structure();
-	  // TODO: dump vmem structure
 	  
 	}
 	else if(signal_number == SIGINT) {
 	  char *msg = "Processed SIGINT\n";
 	  noticed(msg);
 	  // TODO: finalizese quiting
-	  fclose(logfile);
-	  // fclose(pagefile);
-	  printf("Quit!\n");
+	  cleanup();
 	  break;
 	}
 	else {
@@ -128,6 +126,19 @@ void noticed(char *msg) {
 
 void sighandler(int signo) {
     signal_number = signo;
+}
+
+void cleanup(){
+    // shared memory löschen
+    munmap(vmem, SHMSIZE);
+    close(shared_memory_file_desc);
+    shm_unlink(SHMKEY);
+    
+    // dateien schliesen
+    fclose(logfile);
+    fclose(pagefile);
+    
+    DEBUG(printf("Quit!\n"));
 }
 
 void vmem_init(){
@@ -190,15 +201,16 @@ void vmem_init(){
 
 void dump_vmem_structure() {
     // alle gespeicherten Daten ausgeben
+    DEBUG(fprintf(stderr, " <========== DUMP OF VMEM =========> \n"));
+    DEBUG(fprintf(stderr, "Administrative Structures:\n"));
+    DEBUG(fprintf(stderr, "filled: %d, next_request: %d pf_count: %d\n",
+	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count));
     DEBUG(fprintf(stderr, " <========== Data in vmem =========> \n"));
     DEBUG(fprintf(stderr, "(index, data)\n"));
     for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
 	fprintf(stderr, "(%d, %d) \n", i, vmem->data[i]);
     }
     
-    DEBUG(fprintf(stderr, "Administrative Structures:\n"));
-    DEBUG(fprintf(stderr, "filled: %d, next_request: %d pf_count: %d",
-	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count));
 }
 
 void init_pagefile(const char *pfname) {

@@ -23,10 +23,6 @@ struct vmem_struct *vmem = NULL;	// Shared Memory with mmanager.c
 
 // Usage: DEBUG(fprintf(stderr, "blubb bla bluff\n"));
 
-
-// dummy functionality
-int memory[550];
-
 void vm_init(){
     // connect to shared memory
     int fd = shm_open(SHMKEY, O_RDWR, S_IRUSR | S_IWUSR); 
@@ -40,7 +36,7 @@ void vm_init(){
     
     // Groesse des gesharten Memory setzten
     if( ftruncate(fd, sizeof(struct vmem_struct)) == -1) {
-        perror("ftruncate failed!\n");
+        perror("ftruncate failed! Make sure ./mmanage is running!\n");
         exit(EXIT_FAILURE);
     }
     else {
@@ -70,14 +66,14 @@ int vmem_read(int address) {
     // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;
     
-    int flags = vmem->pt.entries[page].flags;
+    // int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
-    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    int req_page_is_loaded = 1;//((flags & PTF_PRESENT) == PTF_PRESENT);
     if (req_page_is_loaded) {
 	return read_page(page, offset);
     }
     else {
-	DEBUG(fprintf(stderr, "dont come here!"));
+	DEBUG(fprintf(stderr, "dont come here! =========> \n"));
     }
     return -1;
     
@@ -110,14 +106,14 @@ void vmem_write(int address, int data){
     // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;
     
-    int flags = vmem->pt.entries[page].flags;
+    // int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
-    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    int req_page_is_loaded = 1;//((flags & PTF_PRESENT) == PTF_PRESENT);
     if (req_page_is_loaded) {
 	write_page(page, offset, data);
     }
     else {
-	DEBUG(fprintf(stderr, "dont come here!"));
+	DEBUG(fprintf(stderr, "dont come here! ===========> \n"));
     }
 }
 
