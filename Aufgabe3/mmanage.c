@@ -186,8 +186,8 @@ void fetch_page(int page) {
     int frame = vmem->pt.entries[page].frame;
     // scrool to the position to write into
     fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
-    int written_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
-    if(written_ints != VMEM_PAGESIZE) {
+    int readen_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(readen_ints != VMEM_PAGESIZE) {
 	perror("Not everything could be read!\n");
 	exit(EXIT_FAILURE);
     }
@@ -202,7 +202,7 @@ int find_remove_frame(){
     }
     else {
 	frame = use_algorithm();
-	DEBUG(fprintf(stderr, "used algorithm\n"));
+	DEBUG(fprintf(stderr, "used algorithm Frame: %d\n", frame));
     }
     
     if(frame==-1) {
@@ -302,6 +302,15 @@ int find_remove_clock2() {
 }
 
 void update_pt(int frame){
+    /*int oldpage = vmem->pt.framepage[frame];
+    vmem->pt.entries[oldpage].flags &= ~PTF_PRESENT;
+    vmem->pt.entries[oldpage].flags &= ~PTF_DIRTY;
+    vmem->pt.entries[oldpage].flags &= ~PTF_USED;
+    vmem->pt.entries[oldpage].frame  =  VOID_IDX;
+
+    vmem->pt.framepage[frame] = vmem->adm.req_pageno;
+    vmem->pt.entries[vmem->adm.req_pageno].frame = frame;
+    vmem->pt.entries[vmem->adm.req_pageno].flags |= PTF_PRESENT;*/
     // unset old page
     int oldpage = vmem->pt.framepage[frame];
     DEBUG(fprintf(stderr, "Update Table: Oldpage: %d OldFrame: %d\n", oldpage, frame));
@@ -315,6 +324,8 @@ void update_unload(int oldpage) {
     // delete all flags
     vmem->pt.entries[oldpage].flags = 0;
     
+  
+  
     // dazugehoerigen frame reference entfernen
     vmem->pt.entries[oldpage].frame = VOID_IDX;
     
