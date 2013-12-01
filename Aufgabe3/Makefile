@@ -4,6 +4,10 @@ LRT := -lrt # lrt -> for shared memory open
 LDFLAGS := -DDEBUG_MESSAGES -lpthread
 SOURCE_FLAGS := -D_XOPEN_SOURCE=600 #need because ipc.h require functions from XOPEN_SOURCE library
 
+CCFLAGS += -DFIFO
+#CCFLAGS += -DCLOCK
+#CCFLAGS += -DCLOCK2
+
 all: vmappl mmanage
 
 vmappl.o: vmappl.c vmappl.h

@@ -10,12 +10,13 @@ int
 main(void)
 {
     // SWANEET TESTING
-    for(int i=0; i<100; i++) {
+    int max = 150;
+    for(int i=0; i<max; i++) {
 	vmem_write(i, i);
     }
     
     int accu = 1;
-    for(int i=0; i<100; i++) {
+    for(int i=0; i<max; i++) {
 	if(i!=vmem_read(i)) {
 	    accu = 0;
 	    break;

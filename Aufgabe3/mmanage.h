@@ -53,6 +53,8 @@ void update_pt(int frame);
 
 int find_remove_frame();
 
+int use_algorithm(void);
+
 int find_remove_fifo(void);
 
 int find_remove_clock(void);

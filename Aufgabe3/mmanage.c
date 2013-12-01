@@ -121,7 +121,7 @@ void signal_proccessing_loop(){
 
 void noticed(char *msg) {
     DEBUG(fprintf(stderr, msg));
-      save_sig_no(0);
+    save_sig_no(0);
 }
 
 void save_sig_no(int signo) {
@@ -133,7 +133,7 @@ void page_fault() {
     int new_frame = VOID_IDX;
     int req_page = vmem->adm.req_pageno;
     
-    DEBUG(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d\n", req_page));
+    DEBUG(fprintf(stderr, "Pagefault aufgetuacht: Requested Page: %d\n", req_page));
     
     // Page fault aufgetreten
     vmem->adm.pf_count += 1;
@@ -198,14 +198,39 @@ int find_remove_frame(){
 	DEBUG(fprintf(stderr, "New Frame: %d\n", frame));
     }
     else {
-	DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE\n"));
+	frame = use_algorithm();
+	DEBUG(fprintf(stderr, "used algorithm\n"));
     }
-    // TODO: algorithmen implementieren
+    
     if(frame==-1) {
-	DEBUG(fprintf(stderr, "fail\n"));
+	DEBUG(fprintf(stderr, "<================= fail Frame is -1 ==============>\n"));
     }
     return frame;
 }
+
+int use_algorithm() {
+#ifdef FIFO
+    return find_remove_fifo();
+#endif
+#ifdef CLOCK
+    return find_remove_clock();
+#endif
+#ifdef CLOCK2
+    return find_remove_clock2();
+#endif
+}
+
+
+int find_remove_fifo() {
+    int frame = vmem->adm.next_alloc_idx;
+    // naechten index weiter rotieren
+    vmem->adm.next_alloc_idx %= (VMEM_NFRAMES-1);
+    return frame;
+}
+
+int find_remove_clock();
+
+int find_remove_clock2();
 
 void update_pt(int frame){
     DEBUG(fprintf(stderr, "update_pagetable frame: %d\n", frame));
