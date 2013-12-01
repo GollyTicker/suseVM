@@ -66,7 +66,7 @@ int vmem_read(int address) {
     // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;
     
-    // int flags = vmem->pt.entries[page].flags;
+    int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
     int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
     
@@ -108,7 +108,7 @@ void set_bits(int *to_be_set, int bits) {
     *(to_be_set) |= bits;
 }
 
-int vmem_read(int address, int data) {
+void vmem_write(int address, int data) {
     vm_init_if_not_ready();
     // page und offset berechnen.
     int page = address / VMEM_PAGESIZE;
@@ -119,7 +119,7 @@ int vmem_read(int address, int data) {
     // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;
     
-    // int flags = vmem->pt.entries[page].flags;
+    int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
     int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
     
