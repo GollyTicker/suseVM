@@ -2,7 +2,6 @@
 #include "test.h"
 
 int main(void){
-  
     dump();
     
     int address = 14;
