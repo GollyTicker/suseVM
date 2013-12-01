@@ -56,7 +56,7 @@ void vm_init(){
 
 int vmem_read(int address) {
     vm_init_if_not_ready();
-    
+    int result;
     // page und offset berechnen.
     int page = address / VMEM_PAGESIZE;
     int offset = address % VMEM_PAGESIZE;
@@ -66,18 +66,17 @@ int vmem_read(int address) {
     // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;
     
-    // int flags = vmem->pt.entries[page].flags;
+    int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
-    int req_page_is_loaded = 1;//((flags & PTF_PRESENT) == PTF_PRESENT);
-    if (req_page_is_loaded) {
-	return read_page(page, offset);
-    }
-    else {
-	DEBUG(fprintf(stderr, "dont come here! =========> \n"));
-    }
-    return -1;
+    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
     
-    // return memory[address];
+    if (!req_page_is_loaded) {
+	DEBUG(fprintf(stderr, "Pagefult for reading!\n"));
+	kill(vmem->adm.mmanage_pid, SIGUSR1);
+	sem_wait(&vmem->adm.sema);
+    }
+    result = read_page(page, offset);
+    return result;
 }
 
 int read_page(int page, int offset) {
@@ -109,9 +108,8 @@ void set_bits(int *to_be_set, int bits) {
     *(to_be_set) |= bits;
 }
 
-void vmem_write(int address, int data){
+void vmem_write(int address, int data) {
     vm_init_if_not_ready();
-    
     // page und offset berechnen.
     int page = address / VMEM_PAGESIZE;
     int offset = address % VMEM_PAGESIZE;
@@ -121,15 +119,16 @@ void vmem_write(int address, int data){
     // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;
     
-    // int flags = vmem->pt.entries[page].flags;
+    int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
-    int req_page_is_loaded = 1;//((flags & PTF_PRESENT) == PTF_PRESENT);
-    if (req_page_is_loaded) {
-	write_page(page, offset, data);
+    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    
+    if (!req_page_is_loaded) {
+	DEBUG(fprintf(stderr, "Pagefult for writing!\n"));
+	kill(vmem->adm.mmanage_pid, SIGUSR1);
+	sem_wait(&vmem->adm.sema);
     }
-    else {
-	DEBUG(fprintf(stderr, "dont come here! ===========> \n"));
-    }
+    write_page(page, offset, data);
 }
 
 void vm_init_if_not_ready() {

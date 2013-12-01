@@ -120,8 +120,8 @@ void signal_proccessing_loop(){
 }
 
 void noticed(char *msg) {
-	DEBUG(fprintf(stderr, msg));
-	save_sig_no(0);
+    DEBUG(fprintf(stderr, msg));
+      save_sig_no(0);
 }
 
 void save_sig_no(int signo) {
@@ -133,7 +133,7 @@ void page_fault() {
     int new_frame = VOID_IDX;
     int req_page = vmem->adm.req_pageno;
     
-    DEBUG(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d", req_page));
+    DEBUG(fprintf(stderr, "Paugefault aufgetuacht: Requested Page: %d\n", req_page));
     
     // Page fault aufgetreten
     vmem->adm.pf_count += 1;
@@ -145,10 +145,10 @@ void page_fault() {
     if( vmem_is_full() ) {
 	store_page(page_unloaded);
     }
+    update_pt(new_frame);
     
     fetch_page(req_page);
     
-    update_pt(new_frame);
     
     // make Logs
     struct logevent le;
@@ -160,8 +160,8 @@ void page_fault() {
     logger(le);
     
     // Den aufrufenden Freigeben
-    sem_wait(&vmem->adm.sema);
-    DEBUG(fprintf(stderr, "Page loaded!"));
+    sem_post(&vmem->adm.sema);
+    DEBUG(fprintf(stderr, "Page loaded!\n"));
 }
 
 int vmem_is_full() {
@@ -174,7 +174,7 @@ void store_page(int page) {
     fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
     int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
     if(written_ints != VMEM_PAGESIZE) {
-	perror("Not everything could be written into the page.");
+	perror("Not everything could be written into the page.\n");
 	exit(EXIT_FAILURE);
     }
 }
@@ -185,26 +185,30 @@ void fetch_page(int page) {
     fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
     int written_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
     if(written_ints != VMEM_PAGESIZE) {
-	perror("Not everything could be read!");
+	perror("Not everything could be read!\n");
 	exit(EXIT_FAILURE);
     }
 }
 
 int find_remove_frame(){
     int frame = VOID_IDX;
-    DEBUG(fprintf(stderr, "TODOOTOOFSDODOFOSDOFOSDFOSODOFOSDOFOSDOFO"));
     if(!vmem_is_full()) {
 	vmem->adm.size += 1;
 	frame = vmem->adm.size;
+	DEBUG(fprintf(stderr, "New Frame: %d\n", frame));
     }
     else {
-    DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE"));
+	DEBUG(fprintf(stderr, "VERY VERY BAD TO COME HERE\n"));
+    }
+    // TODO: algorithmen implementieren
+    if(frame==-1) {
+	DEBUG(fprintf(stderr, "fail\n"));
     }
     return frame;
 }
 
 void update_pt(int frame){
-    
+    DEBUG(fprintf(stderr, "update_pagetable frame: %d\n", frame));
     // unset old page
     int oldpage = vmem->pt.framepage[frame];
     update_unload(oldpage);
