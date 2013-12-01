@@ -21,8 +21,11 @@ mmanage.o: mmanage.c mmanage.h
 mmanage: mmanage.o
 	$(CC) $(LDFLAGS) -o mmanage mmanage.o $(LRT)
 	
-test: test.c
-	$(CC) $(CCFLAGS) $(SOURCE_FLAGS) -o test test.c $(LRT)
+test.o: test.c test.h
+	$(CC) $(CCFLAGS) $(SOURCE_FLAGS) -c -o test.o test.c $(LRT)
+
+test: test.o
+	$(CC) $(LDFLAGS) -o test test.o $(LRT)
 
 clean:
 	rm -f vmappl mmanage *.o logfile.txt pagefile.bin
