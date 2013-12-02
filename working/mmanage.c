@@ -87,45 +87,22 @@ int
     
     signal_proccessing_loop();
     
-    /*
-    while(1) {
-        signal_number = 0;
-        pause();
-        if(signal_number == SIGUSR1) {
-#ifdef DEBUG_MESSAGES
-            fprintf(stderr, "Processed SIGUSR1\n");
-#endif
-            signal_number = 0;
-        }
-        else if(signal_number == SIGUSR2) {
-#ifdef DEBUG_MESSAGES
-            fprintf(stderr, "Processed SIGUSR2\n");
-#endif
-            signal_number = 0;
-        }
-        else if(signal_number == SIGINT) {
-#ifdef DEBUG_MESSAGES
-            fprintf(stderr, "Processed SIGINT\n");
-#endif
-        }
-    }*/
-    
     exit(EXIT_SUCCESS);
 }
 
 void signal_proccessing_loop() {
-    DEBUG(fprintf(stderr, "Memory Manager: pid(%d)\n", getpid()));
-    DEBUG(fprintf(stderr, "Memory Manager running...\n"));
+    fprintf(stderr, "Memory Manager: pid(%d)\n", getpid());
+    fprintf(stderr, "Memory Manager running...\n");
     while(1) {
 	signal_number = 0;
 	pause();
-	if(signal_number == SIGUSR2) {     /* PT dump */
-	  char *msg = "Processed SIGUSR2\n";
+	if(signal_number == SIGUSR2) {
+	  char *msg = "Signal recieved(SIGUSR2): dumping virtual memory\n";
 	  noticed(msg);
 	  dump_vmem_structure();
 	}
 	else if(signal_number == SIGINT) {
-	  char *msg = "Processed SIGINT\n";
+	  char *msg = "Signal recieved(SIGINT): Quitting...\n";
 	  noticed(msg);
 	  cleanup();
 	  break;
@@ -136,7 +113,6 @@ void signal_proccessing_loop() {
 	}
     }
 }
-
 
 void page_fault() {
     int page_unloaded = VOID_IDX;
@@ -177,13 +153,19 @@ void page_fault() {
 
 void sighandler(int signo) {
     signal_number = signo;
-	if(signo == SIGUSR1) {
-	  char *msg = "Processed SIGUSR1\n";
-	  noticed(msg);
-	  
-	  page_fault();
-	}
-  }
+    
+    // page fault has to be processed inside sig_handler
+    case_page_fault();
+}
+
+void case_page_fault() {
+    if(signal_number == SIGUSR1) {
+	char *msg = "Signal recieved(SIGUSR1): Processing Pagefault\n";
+	noticed(msg);
+	page_fault();
+    }
+}
+
 void dump_vmem_structure() {
     // alle gespeicherten Daten ausgeben
     fprintf(stderr, " <========== DUMP OF VMEM =========> \n");
@@ -208,7 +190,7 @@ void cleanup(){
     fclose(logfile);
     fclose(pagefile);
     
-    DEBUG(printf("Quit!\n"));
+    printf("Quit!\n");
 }
 
 void noticed(char *msg) {
@@ -340,6 +322,7 @@ int find_remove_clock2() {
     
     return frame;
 }
+
 
 void update_pt(int frame){
     // unset old page

@@ -8,7 +8,7 @@ SOURCE_FLAGS := -D_XOPEN_SOURCE=600 #need because ipc.h requires functions from 
 CCFLAGS += -DCLOCK
 #CCFLAGS += -DCLOCK2
 
-CCFLAGS += -DDEBUG_MESSAGES
+#CCFLAGS += -DDEBUG_MESSAGES
 
 all: vmappl mmanage
 

@@ -39,8 +39,6 @@ void sighandler(int signo);
 
 void vmem_init(void);
 
-void allocate_page(void);
-
 void fetch_page(int pt_idx);
 
 void store_page(int pt_idx);
@@ -58,6 +56,8 @@ int find_remove_clock(void);
 int find_remove_clock2(void);
 
 void signal_proccessing_loop(void);
+
+void case_page_fault(void);
 
 // opens pagefile and maybe fills
 // it with random data for easier debugging
@@ -82,9 +82,6 @@ void noticed(char *msg);
 void update_load(int frame);
 void update_unload(int oldpage);
 
-// void init_semaphor(void);
-
-//
 void page_fault();
 
 void increment_alloc_idx(int alloc_idx);
