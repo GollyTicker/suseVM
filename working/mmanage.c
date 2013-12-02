@@ -58,7 +58,7 @@ int
     
     /* Setup signal handler */
     /* Handler for USR1 */
-    sigact.sa_handler = sighandler;
+    /*sigact.sa_handler = sighandler;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     if(sigaction(SIGUSR1, &sigact, NULL) == -1) {
@@ -69,7 +69,7 @@ int
     else {
         fprintf(stderr, "USR1 handler successfully installed\n");
     }
-#endif /* DEBUG_MESSAGES */
+#endif
 
     if(sigaction(SIGUSR2, &sigact, NULL) == -1) {
         perror("Error installing signal handler for USR2");
@@ -79,7 +79,7 @@ int
     else {
         fprintf(stderr, "USR2 handler successfully installed\n");
     }
-#endif /* DEBUG_MESSAGES */
+#endif
 
     if(sigaction(SIGINT, &sigact, NULL) == -1) {
         perror("Error installing signal handler for INT");
@@ -89,9 +89,36 @@ int
     else {
         fprintf(stderr, "INT handler successfully installed\n");
     }
-#endif /* DEBUG_MESSAGES */
+#endif*/
+    /* Setup signal handler */
+    /* Handler for USR1 */
+    sigact.sa_handler = sighandler;
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = 0;
+    if(sigaction(SIGUSR1, &sigact, NULL) != 0) {
+        perror("Error installing signal handler for USR1");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "USR1 handler successfully installed\n"));
+    }
 
+    if(sigaction(SIGUSR2, &sigact, NULL) != 0) {
+        perror("Error installing signal handler for USR2");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "USR2 handler successfully installed\n"));
+    }
 
+    if(sigaction(SIGINT, &sigact, NULL) != 0) {
+        perror("Error installing signal handler for INT");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "INT handler successfully installed\n"));
+    }
+    
     /* Signal processing loop */
     while(1) {
         signal_number = 0;
