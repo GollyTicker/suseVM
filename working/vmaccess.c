@@ -49,9 +49,8 @@ void vm_init(){
 }
 
 int vmem_read(int address) {
-	if(vmem == NULL) {							/* Pruefen ob eine Verbindung zum Shared Memory besteht*/
-		vm_init();
-	}
+	vm_init_if_not_ready();
+	
 	int data;
 	int page = address/VMEM_PAGESIZE;					/* Ermitlung der Pagenummer */
 	int offset = address%VMEM_PAGESIZE;					/* Ermittlung des Offsets */
@@ -71,15 +70,29 @@ int vmem_read(int address) {
 }
 
 int read_page(int page, int offset) {	
-	vmem->pt.entries[page].count++;									/*Counter für LFU*/
-	vmem->pt.entries[page].flags |= PTF_USED;							/* Used Flag setzen (CLOCK)*/
-	return vmem->data[vmem->pt.entries[page].frame*VMEM_PAGESIZE + offset];/* Lesen */
+    countUsed(page);
+    int index = calcIndexFromPageOffset(page, offset);
+    // DEBUG(fprintf(stderr, "Reading: Page: %d Offset: %d\n", page, offset));
+    return vmem->data[index];
+}
+
+int calcIndexFromPageOffset(int page, int offset) {
+    return (vmem->pt.entries[page].frame*VMEM_PAGESIZE) + offset;
+}
+
+void countUsed(int page) {
+    // if USED bit 1 is already set, then set the second used bit.
+    int used_1_is_set = vmem->pt.entries[page].flags & PTF_USED;
+    if(used_1_is_set) {
+	vmem->pt.entries[page].flags |= PTF_USED1;
+    }
+    // the first used bit is always set
+    vmem->pt.entries[page].flags |= PTF_USED;
 }
 
 void vmem_write(int address, int data) {
-	if(vmem == NULL) {			//Überprüfen ob mit shared Memory verbunden
-		vm_init();
-	}
+	vm_init_if_not_ready();
+	
 	int page = address/VMEM_PAGESIZE;
 	int offset = address%VMEM_PAGESIZE;
 	
@@ -97,8 +110,24 @@ void vmem_write(int address, int data) {
 }
 
 void write_page(int page, int offset, int data) {
-	vmem->data[vmem->pt.entries[page].frame*VMEM_PAGESIZE + offset] = data;
-	//vmem->pt.entries[vmem->pt.framepage[page]].count++;
-	vmem->pt.entries[page].flags |= PTF_USED;
-	vmem->pt.entries[page].flags |= PTF_DIRTY;
+    countUsed(page);
+    
+    // mark the change and to make sure it'll be updated
+    // into the pagefile.bin
+    vmem->pt.entries[page].flags |= PTF_DIRTY;
+    
+    int index = calcIndexFromPageOffset(page, offset);
+    // DEBUG(fprintf(stderr, "Write: Page: %d Offset: %d Data: %d\n", page, offset, data));
+    vmem->data[index] = data;
+}
+
+
+void vm_init_if_not_ready() {
+    if(vmem == NULL) {
+        vm_init();
+    }
+}
+
+void dump() {
+    kill(vmem->adm.mmanage_pid,SIGUSR2);
 }

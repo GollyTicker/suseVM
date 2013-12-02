@@ -37,6 +37,7 @@ typedef unsigned int Bmword;    /* Frame bitmap */
 #define PTF_PRESENT     1
 #define PTF_DIRTY       2       /* store: need to write */
 #define PTF_USED        4       /* For clock algo only */
+#define PTF_USED1	8
 
 struct pt_entry
 {

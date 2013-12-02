@@ -31,7 +31,7 @@ void vm_init_if_not_ready();
 
 
 void countUsed(int page);
-void calcIndexFromPageOffset(int page, int offset);
+int calcIndexFromPageOffset(int page, int offset);
 
 // Misc. - for testing purposes
 void dump();
