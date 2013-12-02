@@ -193,24 +193,6 @@ void sighandler(int signo) {
         /* Semaphor freigeben */
 		sem_post(&vmem->adm.sema);
 	}
-    
-	if(signo == SIGUSR2) {
-		/*int i;
-		int j;
-		int max_pf_idx = 300;
-		
-		printf("Data :\n");
-		for(i=0; i<VMEM_NFRAMES * VMEM_PAGESIZE; i++) {
-			printf("%d   %d\n", i, vmem->data[i]);
-		}
-      
-		rewind(pagefile);
-		printf("Page File: \n");
-		for(i=0; i<max_pf_idx; i++) {
-			fread(&j, sizeof(int), 1, pagefile);
-			printf("%d   %d\n", i, j);
-		}*/
-    }
   }
 void dump_vmem_structure() {
     // alle gespeicherten Daten ausgeben
@@ -311,28 +293,26 @@ int find_remove_clock() {
     return frame;
 }
 
-void fetch_page(int pt_idx) {
-	int count;
-	int data_idx = vmem->pt.entries[pt_idx].frame;
-
-	fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*pt_idx, SEEK_SET);
-	count = fread(&vmem->data[VMEM_PAGESIZE*data_idx], sizeof(int), VMEM_PAGESIZE, pagefile);
-	if(count != VMEM_PAGESIZE) {
-		perror("Konnte Page nicht lesen");
-		exit(EXIT_FAILURE);
-	}
+void store_page(int page) {
+    int frame = vmem->pt.entries[page].frame;
+    // scrool to the position to write into
+    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+    int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(written_ints != VMEM_PAGESIZE) {
+	perror("Not everything could be written into the page.\n");
+	exit(EXIT_FAILURE);
+    }
 }
 
-void store_page(int pt_idx) {
-	int count;
-	int data_idx = vmem->pt.entries[pt_idx].frame;
-
-	fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*pt_idx, SEEK_SET);
-	count = fwrite(&vmem->data[VMEM_PAGESIZE*data_idx], sizeof(int), VMEM_PAGESIZE, pagefile);
-	if(count != VMEM_PAGESIZE) {
-		perror("Konnte Page nicht schreiben");
-		exit(EXIT_FAILURE);
-	}
+void fetch_page(int page) {
+    int frame = vmem->pt.entries[page].frame;
+    // scrool to the position to write into
+    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+    int readen_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+    if(readen_ints != VMEM_PAGESIZE) {
+	perror("Not everything could be read!\n");
+	exit(EXIT_FAILURE);
+    }
 }
 
 
