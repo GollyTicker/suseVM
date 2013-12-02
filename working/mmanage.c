@@ -25,7 +25,8 @@ FILE *logfile = NULL;
 int signal_number = 0;
 
 
-int shm_fd;							/* Shared Memory File Descriptor */
+// http://linux.die.net/man/3/shm_open
+int shared_memory_file_desc;
 int data_full = 0;						/* Gibt an ob alle Frames belegt sind*/
 
 int
@@ -149,16 +150,16 @@ void init_pagefile(const char *pfname) {
   
 void vmem_init(void) {
 	int i;
-	shm_fd = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);			//SHMKEY = vmem.h, O_CREAT = if the file does not exist it will be create
-	if(!shm_fd) {									//O_RDWR = Write and Read
+	shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);			//SHMKEY = vmem.h, O_CREAT = if the file does not exist it will be create
+	if(!shared_memory_file_desc) {									//O_RDWR = Write and Read
 		perror("Shared Memory konnte nicht erstellt werden");
 	}
 
-	if( ftruncate(shm_fd, SHMSIZE) == -1) {
+	if( ftruncate(shared_memory_file_desc, SHMSIZE) == -1) {
 		perror("Shared Memory konnte nicht erstellt werden");
 	}
 
-	vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
 	if(!vmem){
 		perror("Shared Memory konnte nicht erstellt werden");
 	}
@@ -263,7 +264,7 @@ void sighandler(int signo) {
     if(signo == SIGINT) {
 		/* clean up */
 		munmap(vmem, SHMSIZE);
-		close(shm_fd);
+		close(shared_memory_file_desc);
 		shm_unlink(SHMKEY);
 		fclose(pagefile);
 		fclose(logfile);
