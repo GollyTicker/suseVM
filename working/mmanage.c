@@ -224,27 +224,6 @@ void sighandler(int signo) {
 		exit(EXIT_SUCCESS);
     }
   }
-  
-  
-/*int find_remove_frame(void) {
-	int frame;
-
-	if(!vmem_is_full()) {
-		frame = vmem->adm.size;
-		vmem->adm.size++;
-	}
-#ifdef FIFO
-	else {
-		frame = find_remove_fifo();
-	}
-#endif
-#ifdef CLOCK
-	else {
-		frame = find_remove_clock();
-	}
-#endif
-	return frame;
-}*/
 
 int find_remove_frame(){
     int frame = VOID_IDX;
@@ -276,7 +255,7 @@ int use_algorithm() {
 #endif
 }
 
-int find_remove_fifo(void) {	
+/*int find_remove_fifo(void) {	
 	int frame = vmem->adm.next_alloc_idx;
 
 	if(frame == VMEM_NFRAMES-1) {
@@ -286,8 +265,26 @@ int find_remove_fifo(void) {
 	}
 #ifdef DEBUG_MESSAGES
 	fprintf(stderr, "Allocating %d\n", frame);
-#endif /* DEBUG_MESSAGES */
+#endif
 	return frame;
+}*/
+
+int find_remove_fifo() {
+    int frame = vmem->adm.next_alloc_idx;
+    // naechsten index weiter rotieren
+    increment_alloc_idx(frame);
+    return frame;
+}
+
+void increment_alloc_idx(int alloc_idx) {
+    vmem->adm.next_alloc_idx++;
+    vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
+    /*if(alloc_idx == (VMEM_NFRAMES -1)) { 
+	vmem->adm.next_alloc_idx = 0;
+    }
+    else {
+	vmem->adm.next_alloc_idx++;
+    }*/
 }
 
 int find_remove_clock(void) {	
