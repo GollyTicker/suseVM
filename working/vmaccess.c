@@ -1,48 +1,52 @@
+// File for vmaccess.c
+// This file gives vmappl.c the access to the virtual memory
+
 #include "vmaccess.h"
-#include "vmem.h"
-#include <sys/mman.h>
-#include <sys/stat.h>        
-#include <fcntl.h>  
 
-struct vmem_struct *vmem = NULL;								/* Shared Memory */
+// shared memory variable
+struct vmem_struct *vmem = NULL;
 
 
-/* Verbinden mit den Shared Memory */
-void vm_init(void) {
-int fd = shm_open(SHMKEY, O_RDWR, S_IRUSR | S_IWUSR);			/* Connection between a shred memory object and a file discriptor */ 
-if(!fd) {
-	perror("shm_open failed\n");
-	exit(EXIT_FAILURE);
-}
+#ifndef DEBUG_MESSAGES
+#define DEBUG(A) 
+#endif
+
 #ifdef DEBUG_MESSAGES
-else {
-	fprintf(stderr, "shm_open succeeded\n");
-}
-#endif /* DEBUG_MESSAGES */
+#define DEBUG(A) (A)
+#endif
 
-if( ftruncate(fd, sizeof(struct vmem_struct)) == -1) {			/* Setze Groesse */
-	perror("ftruncate failed\n");
-	exit(EXIT_FAILURE);
-}
-#ifdef DEBUG_MESSAGES
-else {
-	fprintf(stderr, "ftruncate succeeded\n");
-}
-#endif /* DEBUG_MESSAGES */
+// Usage: DEBUG(fprintf(stderr, "my message %d\n", count));
 
-/* Struktur in den Speicher mappen */
-vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-if(!vmem) {
-	perror("mmap failed\n");
-	exit(EXIT_FAILURE);
-}
-#ifdef DEBUG_MESSAGES
-else {
-	fprintf(stderr, "mmap succeeded\n");
-}
-#endif /* DEBUG_MESSAGES */
-}
+void vm_init(){
+    // connect to shared memory
+    int fd = shm_open(SHMKEY, O_RDWR, S_IRUSR | S_IWUSR); 
+    if(!fd) {
+        perror("shm_open failed!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "shm_open succeeded.\n"));
+    }
+    
+    // Groesse des gesharten Memory setzten
+    if( ftruncate(fd, sizeof(struct vmem_struct)) == -1) {
+        perror("ftruncate failed! Make sure ./mmanage is running!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "ftruncate succeeded.\n"));
+    }
 
+    // mach den Shared Memory unter vmem verfuegbar
+    vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if(!vmem) {
+        perror("mapping into vmem failed!\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        DEBUG(fprintf(stderr, "mapping into vmem succeeded!\n"));
+    }
+}
 
 int vmem_read(int address) {
 	if(vmem == NULL) {							/* Pruefen ob eine Verbindung zum Shared Memory besteht*/
