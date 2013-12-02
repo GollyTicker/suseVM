@@ -19,15 +19,10 @@
 
 #include "mmanage.h"
 
-
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h> 
-
-struct vmem_struct *vmem = NULL;
+struct vmem_struct *vmem = NULL;	// Shared Memory with vmaccess.c
 FILE *pagefile = NULL;
 FILE *logfile = NULL;
-int signal_number = 0;						/* Received signal */
+int signal_number = 0;
 
 
 int shm_fd;							/* Shared Memory File Descriptor */

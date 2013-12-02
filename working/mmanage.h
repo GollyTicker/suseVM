@@ -9,6 +9,13 @@
 #include "vmem.h"
 #include <limits.h>
 
+// for connection to shared memory
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
+
 /** Event struct for logging */
 // Die zu loggenden Daten werden jedesmal
 // hier reingeschrieben bevordie
