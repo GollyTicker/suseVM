@@ -40,49 +40,22 @@ int shared_memory_file_desc;
 // Usage: DEBUG(fprintf(stderr, "blubb bla bluff\n"));
 
 
-
-int data_full = 0;						/* Gibt an ob alle Frames belegt sind*/
-
 int
  main(void)
 {
-    srand(SEED_PF);						/* Zufallszahlengenerator initialisieren */
-  
+    srand(SEED_PF);
+    
     struct sigaction sigact;
 
     /* Init pagefile */
     init_pagefile(MMANAGE_PFNAME);
-    if(!pagefile) {
-        perror("Error creating pagefile");
-        exit(EXIT_FAILURE);
-    }
 
     /* Open logfile */
-    logfile = fopen(MMANAGE_LOGFNAME, "w");
-    if(!logfile) {
-        perror("Error creating logfile");
-        exit(EXIT_FAILURE);
-    }
+    open_logfile();
 
     /* Create shared memory and init vmem structure */
     vmem_init();
-    if(!vmem) {
-        perror("Error initialising vmem");
-        exit(EXIT_FAILURE);
-    }
-#ifdef DEBUG_MESSAGES
-    else {
-        fprintf(stderr, "vmem successfully created\n");
-    }
-#endif /* DEBUG_MESSAGES */
-
-    /* Initialize Semaphor */
-    int res = sem_init(&vmem->adm.sema, 1, 1);
-    if(res != 0) {
-	perror("Semaphor-Initialization failed!");
-	exit(EXIT_FAILURE);
-    }
-
+    
     /* Setup signal handler */
     /* Handler for USR1 */
     sigact.sa_handler = sighandler;
@@ -146,23 +119,81 @@ int
     return 0;
 }
 
-void init_pagefile(const char *pfname) {
+/*void init_pagefile(const char *pfname) {
 	int i;
 	int count;
 	
-	int data[VMEM_NPAGES * VMEM_PAGESIZE];						/* Array das ins Pagefile kommt*/
+	int data[VMEM_NPAGES * VMEM_PAGESIZE];						//Array das ins Pagefile kommt
 	for(i=0; i<(sizeof(data)/sizeof(int)); i++) {
 		data[i] = rand()%1000;										
 	}
-	pagefile = fopen(pfname, "w+b");						/* Page File lesend und schreibend öffnen */
+	pagefile = fopen(pfname, "w+b");						// Page File lesend und schreibend öffnen
 	
-	count = fwrite(data, sizeof(int),  (sizeof(data)/sizeof(int)), pagefile);	 /* Array data ins Page File schreiben*/
+	count = fwrite(data, sizeof(int),  (sizeof(data)/sizeof(int)), pagefile);	 // Array data ins Page File schreiben
 	if (count != (sizeof(data)/sizeof(int))){
 		perror("Page File konnte nicht erstellt werden");
 	}
+}*/
+
+
+void vmem_init(){
+    shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    if(!shared_memory_file_desc) {
+	perror("Shared Memory creation failed!");
+	exit(EXIT_FAILURE);
+    }
+    if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
+	perror("Shared Memory creation(truncate) failed!");
+	exit(EXIT_FAILURE);
+    }
+
+    vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
+    if(!vmem){
+	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
+	exit(EXIT_FAILURE);
+    }
+    DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
+    
+    // fill vmem with intial NULL-Data
+    vmem->adm.size = 0;										
+    vmem->adm.mmanage_pid = getpid();
+    vmem->adm.shm_id = VOID_IDX;
+    vmem->adm.req_pageno = VOID_IDX;
+    vmem->adm.next_alloc_idx = 0;
+    vmem->adm.pf_count = 0;
+    
+    // Semaphor initialisieren
+    int sem = sem_init(&vmem->adm.sema, 1, 1);
+    if(sem != 0) {
+	perror("Semaphor initialization failed!");
+	exit(EXIT_FAILURE);
+    }
+    
+    // Page Table initialisieren
+    for(int i = 0; i < VMEM_NPAGES; i++) {
+	vmem->pt.entries[i].flags = 0;
+	
+	// TODO: braucht man dies hier wirklich?
+	// vmem->pt.entries[i].flags &= ~PTF_PRESENT;
+	// vmem->pt.entries[i].flags &= ~PTF_DIRTY;
+	// vmem->pt.entries[i].flags &= ~PTF_USED;
+
+	vmem->pt.entries[i].frame = VOID_IDX;
+    }
+    
+    // Fragepage initialisieren
+    for(int i = 0; i < VMEM_NFRAMES; i++) {
+	vmem->pt.framepage[i] = VOID_IDX;
+    }
+      
+    // data initialisieren
+    for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+	vmem->data[i] = VOID_IDX;
+    }
+    
+    DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
 }
-  
-void vmem_init(void) {
+/*void vmem_init(void) {
 	int i;
 	shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);			//SHMKEY = vmem.h, O_CREAT = if the file does not exist it will be create
 	if(!shared_memory_file_desc) {									//O_RDWR = Write and Read
@@ -186,7 +217,7 @@ void vmem_init(void) {
 	vmem->adm.pf_count = 0;
 	// vmem->adm.g_count = VOID_IDX;
     
-	/* Page Table initialisieren */
+	
 	for(i=0; i<VMEM_NPAGES; i++) {
 		vmem->pt.entries[i].flags = 0;
 		vmem->pt.entries[i].flags &= ~PTF_PRESENT;
@@ -196,16 +227,16 @@ void vmem_init(void) {
 		vmem->pt.entries[i].frame = VOID_IDX;
 	}
 	
-	/* Array framepage initialisieren */
+	
 	for(i=0; i<VMEM_NFRAMES; i++) {
 		vmem->pt.framepage[i] = VOID_IDX;
 	}
 	
-	/* Array data initialisieren */
+	
 	for(i=0; i<VMEM_NFRAMES * VMEM_PAGESIZE; i++) {
 		vmem->data[i] = VOID_IDX;
 	}
-}
+}*/
 
 void sighandler(int signo) {
     
@@ -296,13 +327,11 @@ int find_remove_frame(void) {
 	}
 #ifdef FIFO
 	else {
-		data_full = 1;
 		frame = find_remove_fifo();
 	}
 #endif /* FIFO */
 #ifdef CLOCK
 	else {
-		data_full = 1;
 		frame = find_remove_clock();
 	}
 #endif /* CLOCK */
@@ -395,7 +424,38 @@ int vmem_is_full() {
     return (vmem->adm.size >= VMEM_NFRAMES);
 }
 
-/* Please DO keep this function unmodified! */
+void init_pagefile(const char *pfname) {
+    int NoOfElements = VMEM_NPAGES*VMEM_PAGESIZE;
+    int data[NoOfElements];
+    // mit random fuellen. wir verwenden unser eigenes random mod
+    for(int i=0; i < NoOfElements; i++) {
+	data[i] = rand() % MY_RANDOM_MOD;
+    }
+    
+    pagefile = fopen(pfname, "w+b");
+    if(!pagefile) {
+        perror("Error creating pagefile");
+        exit(EXIT_FAILURE);
+    }
+    
+    int writing_result = fwrite(data, sizeof(int), NoOfElements, pagefile);
+    if(!writing_result) {
+        perror("Error creating pagefile");
+        exit(EXIT_FAILURE);
+    }
+    DEBUG(fprintf(stderr, "Pagefile created!\n"));
+}
+
+void open_logfile(){
+    logfile = fopen(MMANAGE_LOGFNAME, "w");
+    if(!logfile) {
+        perror("Error creating logfile");
+        exit(EXIT_FAILURE);
+    }
+    DEBUG(fprintf(stderr, "Logfile created!\n"));
+}
+
+/* Do not change!  */
 void
 logger(struct logevent le)
 {

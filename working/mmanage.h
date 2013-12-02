@@ -65,6 +65,8 @@ int find_remove_clock2(void);
 // it with random data for easier debugging
 void init_pagefile(const char *pfname);
 
+void open_logfile();
+
 // destroy all data and structurs because
 // the process is ending
 void cleanup();
@@ -84,8 +86,6 @@ void update_unload(int oldpage);
 
 // void init_semaphor(void);
 
-
-
 //
 void page_fault();
 
@@ -103,6 +103,8 @@ void dump_vmem_structure();
 #define VMEM_ALGO_LRU   1
 #define VMEM_ALGO_CLOCK 2
 #define VMEM_ALGO_CLOCK2 3
+
+#define MY_RANDOM_MOD 123
 
 #define SEED_PF 290913        /**< Get reproducable pseudo-random numbers for
                            init_pagefile */
