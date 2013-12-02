@@ -255,20 +255,6 @@ int use_algorithm() {
 #endif
 }
 
-/*int find_remove_fifo(void) {	
-	int frame = vmem->adm.next_alloc_idx;
-
-	if(frame == VMEM_NFRAMES-1) {
-		vmem->adm.next_alloc_idx = 0;
-	} else {
-		vmem->adm.next_alloc_idx++;
-	}
-#ifdef DEBUG_MESSAGES
-	fprintf(stderr, "Allocating %d\n", frame);
-#endif
-	return frame;
-}*/
-
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
     // naechsten index weiter rotieren
@@ -279,14 +265,33 @@ int find_remove_fifo() {
 void increment_alloc_idx(int alloc_idx) {
     vmem->adm.next_alloc_idx++;
     vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
-    /*if(alloc_idx == (VMEM_NFRAMES -1)) { 
-	vmem->adm.next_alloc_idx = 0;
-    }
-    else {
-	vmem->adm.next_alloc_idx++;
-    }*/
 }
 
+
+int find_remove_clock() {
+    int frame;
+    int done = 0;
+    
+    while(!done) {
+	int alloc_idx = vmem->adm.next_alloc_idx;
+	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
+	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
+	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
+	
+	if(is_frame_flag_used) {	// if frame is used. unset it and continue to next.
+	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
+	    increment_alloc_idx(alloc_idx);
+	}
+	else {
+	    frame = alloc_idx;
+	    done = 1;
+	}
+    }
+    increment_alloc_idx(vmem->adm.next_alloc_idx);
+    
+    return frame;
+}
+/*
 int find_remove_clock(void) {	
 	int frame;
 	int done = 0;
@@ -314,9 +319,9 @@ int find_remove_clock(void) {
 	
 #ifdef DEBUG_MESSAGES
 	fprintf(stderr, "Allocating %d\n", frame);
-#endif /* DEBUG_MESSAGES */
+#endif
 	return frame;
-}
+}*/
 
 void fetch_page(int pt_idx) {
 	int count;
