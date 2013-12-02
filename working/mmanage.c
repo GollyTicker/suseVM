@@ -169,8 +169,8 @@ void vmem_init(void) {
 	vmem->adm.shm_id = VOID_IDX;
 	vmem->adm.req_pageno = VOID_IDX;
 	vmem->adm.next_alloc_idx = 0;
-	vmem->adm.pf_count = VOID_IDX;
-	vmem->adm.g_count = VOID_IDX;
+	vmem->adm.pf_count = 0;
+	// vmem->adm.g_count = VOID_IDX;
     
 	/* Page Table initialisieren */
 	for(i=0; i<VMEM_NPAGES; i++) {
@@ -241,7 +241,8 @@ void sighandler(int signo) {
 		le.replaced_page = oldpage;
 		le.alloc_frame = frame;
 		le.pf_count = vmem->adm.pf_count;
-		le.g_count = vmem->adm.g_count;
+		
+		le.g_count = 0;	// <- Was heißt g_count?
 		
 		logger(le);
 		
@@ -256,7 +257,7 @@ void sighandler(int signo) {
 		
 		printf("Data :\n");
 		for(i=0; i<VMEM_NFRAMES * VMEM_PAGESIZE; i++) {
-			printf("%d   %d   %d\n", i, vmem->data[i], vmem->pt.entries[vmem->pt.framepage[i/VMEM_PAGESIZE]].count);
+			printf("%d   %d\n", i, vmem->data[i]);
 		}
       
 		rewind(pagefile);
@@ -286,12 +287,6 @@ int find_remove_frame(void) {
 		frame = vmem->adm.size;
 		vmem->adm.size++;
 	}
-#ifdef LFU
-	else {
-		data_full = 1;
-		frame = find_remove_lfu();
-	}
-#endif /* LFU */
 #ifdef FIFO
 	else {
 		data_full = 1;
@@ -305,20 +300,6 @@ int find_remove_frame(void) {
 	}
 #endif /* CLOCK */
 	return frame;
-}
-  
-int find_remove_lfu(void) {
-	int i;
-	int min = 0;
-	for(i=0; i<VMEM_NFRAMES; i++) {
-		if(vmem->pt.entries[vmem->pt.framepage[i]].count < vmem->pt.entries[vmem->pt.framepage[min]].count) {
-			min = i;
-		}
-	}
-#ifdef DEBUG_MESSAGES
-	fprintf(stderr, "Allocating %d\n", min);
-#endif /* DEBUG_MESSAGES */
-	return min;
 }
 
 int find_remove_fifo(void) {	

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <semaphore.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
@@ -24,26 +25,56 @@
 typedef unsigned int Bmword;    /* Frame bitmap */
 
 /* Sizes */
+// adressraum das den prozesen vorgegaukelt wird
 #define VMEM_VIRTMEMSIZE 1024   /* Process address space / items */
-#define VMEM_PHYSMEMSIZE  128	/* Physical memory / tems */
-#define VMEM_PAGESIZE     8     /* Items per page */
-#define VMEM_NPAGES     (VMEM_VIRTMEMSIZE / VMEM_PAGESIZE)     /* Total number of pages */
-#define VMEM_NFRAMES    (VMEM_PHYSMEMSIZE / VMEM_PAGESIZE)     /* Number of available frames */
+
+// unser Shared Memory(RAM)
+#define VMEM_PHYSMEMSIZE  128   /* Physical memory / items */
+
+// jede page hat 8 speicherstellen
+#define VMEM_PAGESIZE       8   /* Items per page */
+
+// Anzahl der Pages in unserem Prozessadressraum
+#define VMEM_NPAGES     (VMEM_VIRTMEMSIZE / VMEM_PAGESIZE)      /* Total 
+                                                                   number 
+                                                                   of
+                                                                   pages 
+                                                                 */
+
+// Anzahl der PAges im Shared Memory/RAM
+#define VMEM_NFRAMES (VMEM_PHYSMEMSIZE / VMEM_PAGESIZE) /* Number of
+                                                           available
+                                                           frames */
+
+                                                           
+
+// wir haben diexse hier nicht verwendet/gebraucht
 #define VMEM_LASTBMMASK (~0U << (VMEM_NFRAMES % (sizeof(Bmword) * 8)))
 #define VMEM_BITS_PER_BMWORD     (sizeof(Bmword) * 8)
 #define VMEM_BMSIZE     ((VMEM_NFRAMES - 1) / VMEM_BITS_PER_BMWORD + 1)
 
+
 /* Page Table */
+// Pro Page wird in einem Int in den lowest vier
+// bits folgendes gespeichert
+
+// ist die page gerade im arbeitsspeicher?
 #define PTF_PRESENT     1
+
+// hat die page sich veraendert und muss gespeichert werden?
 #define PTF_DIRTY       2       /* store: need to write */
+
+// CLOCK ALGO 1 und 2 - das erste USED BIT
 #define PTF_USED        4       /* For clock algo only */
-#define PTF_USED1	8
+
+// CLOCK ALGO 2 - das zweite USED BIT
+#define PTF_USED1       8       /* For clock2 algo only */
 
 struct pt_entry
 {
     int flags;                  /* see defines above */
     int frame;                  /* Frame idx */
-    int count;                  /* For LFU algo */
+    
 };
 
 struct vmem_adm_struct
