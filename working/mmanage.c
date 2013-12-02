@@ -27,6 +27,20 @@ int signal_number = 0;
 
 // http://linux.die.net/man/3/shm_open
 int shared_memory_file_desc;
+
+
+#ifndef DEBUG_MESSAGES
+#define DEBUG(A) 
+#endif
+
+#ifdef DEBUG_MESSAGES
+#define DEBUG(A) (A)
+#endif
+
+// Usage: DEBUG(fprintf(stderr, "blubb bla bluff\n"));
+
+
+
 int data_full = 0;						/* Gibt an ob alle Frames belegt sind*/
 
 int
@@ -217,7 +231,7 @@ void sighandler(int signo) {
 		oldpage = vmem->pt.framepage[frame];
 			
 		/* page speichern */
-		if(data_full) {
+		if(vmem_is_full()) {
 			if((vmem->pt.entries[oldpage].flags & PTF_DIRTY) == PTF_DIRTY) {
 				store_page(vmem->pt.framepage[frame]);
 			}	
@@ -276,7 +290,7 @@ void sighandler(int signo) {
 int find_remove_frame(void) {
 	int frame;
 
-	if(vmem->adm.size < VMEM_NFRAMES) {
+	if(!vmem_is_full()) {
 		frame = vmem->adm.size;
 		vmem->adm.size++;
 	}
@@ -375,6 +389,10 @@ void update_pt(int frame) {
 	vmem->pt.framepage[frame] = vmem->adm.req_pageno;
 	vmem->pt.entries[vmem->adm.req_pageno].frame = frame;
 	vmem->pt.entries[vmem->adm.req_pageno].flags |= PTF_PRESENT;
+}
+
+int vmem_is_full() {
+    return (vmem->adm.size >= VMEM_NFRAMES);
 }
 
 /* Please DO keep this function unmodified! */
