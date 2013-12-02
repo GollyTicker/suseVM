@@ -70,41 +70,68 @@ typedef unsigned int Bmword;    /* Frame bitmap */
 // CLOCK ALGO 2 - das zweite USED BIT
 #define PTF_USED1       8       /* For clock2 algo only */
 
-struct pt_entry
-{
+// ein eintrag in der Pagetable
+// gepeichert sind die flags(PRESENT, USEDBITS etc...)
+// sowie der index des dazugehoerigen Frames
+// falls die Page gerade  geladen ist.
+struct pt_entry {
     int flags;                  /* see defines above */
     int frame;                  /* Frame idx */
-    
 };
 
-struct vmem_adm_struct
-{
+// administrative Struktur im Shared Memory
+// die wird zur Kommunikation zwischen
+// vmaccess.c und mmanage.c verwendet.
+// Vor dem sem_wait schreibt vmaccess.c
+// die Informationen (z.B. welhc ePage soll geladen werden)
+// in diese Struktur. mmanage.c wird dann
+// nachher diese Information lesen und entsprechend verarbeiten
+struct vmem_adm_struct {
+    
+    // Anzahl der besetzten Frames im RAM/Shared Memory
+    // beginnt bei 0 und geht im Laufe des Programms 0..1..2 .. VMEM_NFRAMES
     int size;
-    pid_t mmanage_pid;
+    
+    pid_t mmanage_pid;  // fuer den kill(pid, SIGUSR1) - Befehl
+    
     int shm_id;
+    
+    // Semaphor fuer das Warten beim Pagefault
     sem_t sema;                 /* Coordinate acces to shm */
     int req_pageno;             /* Number of requested page */
     int next_alloc_idx;         /* Next frame to allocate (FIFO, CLOCK) 
                                  */
     int pf_count;               /* Page fault counter */
-    int g_count;                /* Global counter,  not used in summer 2012 */
+    
+    // hm....
     Bmword bitmap[VMEM_BMSIZE]; /* 0 = free */
 };
 
-struct pt_struct
-{
+struct pt_struct {
+    // dieses array ist das page table.
+    // zu jedem page gibt es den entsprchenden Eintrag(entry)
     struct pt_entry entries[VMEM_NPAGES];
+    
+    // in dieser Tabelle steht, zu welchem
+    // Frame welche Page zugeordnet ist.
+    // Dies macht es insofern einfacher,
+    // da wir nun nicht ueber alle Pages iterieren muessen
+    // um zu einem Frame dessen Page zu finden.
     int framepage[VMEM_NFRAMES];        /* pages on frame */
 };
 
 /* This is to be located in shared memory */
-struct vmem_struct
-{
+// Im shared memory sind daher einfach
+// das Pagetable, die administrative Struktur
+// und die derzeit geladenen zu finden.
+struct vmem_struct {
     struct vmem_adm_struct adm;
     struct pt_struct pt;
     int data[VMEM_NFRAMES * VMEM_PAGESIZE];
 };
 
+// Groesse der Shared Memory Struktur
+// fuer die initialisierung.
 #define SHMSIZE (sizeof(struct vmem_struct))
 
 #endif /* VMEM_H */
