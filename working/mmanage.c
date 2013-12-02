@@ -109,9 +109,8 @@ int
 #endif
         }
     }*/
-
-
-    return 0;
+    
+    exit(EXIT_SUCCESS);
 }
 
 void signal_proccessing_loop() {
@@ -130,14 +129,12 @@ void signal_proccessing_loop() {
 	else if(signal_number == SIGUSR2) {     /* PT dump */
 	  char *msg = "Processed SIGUSR2\n";
 	  noticed(msg);
-	  
-	  //dump_vmem_structure();
-	  
+	  dump_vmem_structure();
 	}
 	else if(signal_number == SIGINT) {
 	  char *msg = "Processed SIGINT\n";
 	  noticed(msg);
-	  // cleanup();
+	  cleanup();
 	  break;
 	}
 	else {
@@ -148,7 +145,7 @@ void signal_proccessing_loop() {
 }
 
 void sighandler(int signo) {
-    
+    signal_number = signo;
 	if(signo == SIGUSR1) {
 				
 		struct logevent le;
@@ -198,7 +195,7 @@ void sighandler(int signo) {
 	}
     
 	if(signo == SIGUSR2) {
-		int i;
+		/*int i;
 		int j;
 		int max_pf_idx = 300;
 		
@@ -212,20 +209,35 @@ void sighandler(int signo) {
 		for(i=0; i<max_pf_idx; i++) {
 			fread(&j, sizeof(int), 1, pagefile);
 			printf("%d   %d\n", i, j);
-		}
-    }
-    
-    if(signo == SIGINT) {
-		/* clean up */
-		munmap(vmem, SHMSIZE);
-		close(shared_memory_file_desc);
-		shm_unlink(SHMKEY);
-		fclose(pagefile);
-		fclose(logfile);
-		exit(EXIT_SUCCESS);
+		}*/
     }
   }
+void dump_vmem_structure() {
+    // alle gespeicherten Daten ausgeben
+    fprintf(stderr, " <========== DUMP OF VMEM =========> \n");
+    fprintf(stderr, "Administrative Structures:\n");
+    fprintf(stderr, "Filled: %d, Next_request: %d pf_count: %d Next_alloc_idx: %d\n",
+	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count, vmem->adm.next_alloc_idx);
+    
+    fprintf(stderr, " <========== Data in vmem =========> \n");
+    fprintf(stderr, "(index, data)\n");
+    for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+	fprintf(stderr, "(%d, %d) \n", i, vmem->data[i]);
+    }
+}
 
+void cleanup(){
+    // shared memory löschen
+    munmap(vmem, SHMSIZE);
+    close(shared_memory_file_desc);
+    shm_unlink(SHMKEY);
+    
+    // dateien schliesen
+    fclose(logfile);
+    fclose(pagefile);
+    
+    DEBUG(printf("Quit!\n"));
+}
 
 void noticed(char *msg) {
     DEBUG(fprintf(stderr, msg));
