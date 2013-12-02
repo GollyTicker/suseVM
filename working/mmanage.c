@@ -66,8 +66,12 @@ int
     }
 #endif /* DEBUG_MESSAGES */
 
-	/* Initialize Semaphor */
-    init_semaphor();
+    /* Initialize Semaphor */
+    int res = sem_init(&vmem->adm.sema, 1, 1);
+    if(res != 0) {
+	perror("Semaphor-Initialization failed!");
+	exit(EXIT_FAILURE);
+    }
 
     /* Setup signal handler */
     /* Handler for USR1 */
@@ -192,14 +196,7 @@ void vmem_init(void) {
 		vmem->data[i] = VOID_IDX;
 	}
 }
-  
-void init_semaphor(void) {
-	int ret = sem_init(&vmem->adm.sema, 1, 1);
-	if(ret == -1) {
-		perror("Semaphor-Initialisierung fehlgeschlagen");
-	}
-}
-  
+
 void sighandler(int signo) {
     
 	if(signo == SIGUSR1) {

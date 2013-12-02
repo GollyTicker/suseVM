@@ -42,25 +42,51 @@ void update_pt(int frame);
 
 int find_remove_frame(void);
 
-int find_remove_fifo(void);
+int use_algorithm(void);
 
-int find_remove_lfu(void);
+int find_remove_fifo(void);
 
 int find_remove_clock(void);
 
-int search_bitmap(void);
+int find_remove_clock2(void);
 
-int find_free_bit(Bmword bmword, Bmword mask);
+// int search_bitmap(void);
 
+// int find_free_bit(Bmword bmword, Bmword mask);
+
+// opens pagefile and maybe fills
+// it with random data for easier debugging
 void init_pagefile(const char *pfname);
 
-void cleanup(void);
+// destroy all data and structurs because
+// the process is ending
+void cleanup();
 
+int vmem_is_full();
+
+// log everthing given in this logevent
 void logger(struct logevent le);
 
-void dump_pt(void);
 
-void init_semaphor(void);
+// print debug statement that we noticed a
+// signal and reset signal number
+void noticed(char *msg);
+
+void update_load(int frame);
+void update_unload(int oldpage);
+
+// void init_semaphor(void);
+
+
+
+//
+void page_fault();
+
+void increment_alloc_idx(int alloc_idx);
+
+void dump_vmem_structure();
+
+
 
 /* Misc */
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */
