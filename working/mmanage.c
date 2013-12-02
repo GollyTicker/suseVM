@@ -36,7 +36,7 @@ int data_full = 0;						/* Gibt an ob alle Frames belegt sind*/
 int
  main(void)
 {
-    srand(SEED);						/* Zufallszahlengenerator initialisieren */
+    srand(SEED_PF);						/* Zufallszahlengenerator initialisieren */
   
     struct sigaction sigact;
 
