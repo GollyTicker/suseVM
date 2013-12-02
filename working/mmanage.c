@@ -119,125 +119,6 @@ int
     return 0;
 }
 
-/*void init_pagefile(const char *pfname) {
-	int i;
-	int count;
-	
-	int data[VMEM_NPAGES * VMEM_PAGESIZE];						//Array das ins Pagefile kommt
-	for(i=0; i<(sizeof(data)/sizeof(int)); i++) {
-		data[i] = rand()%1000;										
-	}
-	pagefile = fopen(pfname, "w+b");						// Page File lesend und schreibend öffnen
-	
-	count = fwrite(data, sizeof(int),  (sizeof(data)/sizeof(int)), pagefile);	 // Array data ins Page File schreiben
-	if (count != (sizeof(data)/sizeof(int))){
-		perror("Page File konnte nicht erstellt werden");
-	}
-}*/
-
-
-void vmem_init(){
-    shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-    if(!shared_memory_file_desc) {
-	perror("Shared Memory creation failed!");
-	exit(EXIT_FAILURE);
-    }
-    if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
-	perror("Shared Memory creation(truncate) failed!");
-	exit(EXIT_FAILURE);
-    }
-
-    vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
-    if(!vmem){
-	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
-	exit(EXIT_FAILURE);
-    }
-    DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
-    
-    // fill vmem with intial NULL-Data
-    vmem->adm.size = 0;										
-    vmem->adm.mmanage_pid = getpid();
-    vmem->adm.shm_id = VOID_IDX;
-    vmem->adm.req_pageno = VOID_IDX;
-    vmem->adm.next_alloc_idx = 0;
-    vmem->adm.pf_count = 0;
-    
-    // Semaphor initialisieren
-    int sem = sem_init(&vmem->adm.sema, 1, 1);
-    if(sem != 0) {
-	perror("Semaphor initialization failed!");
-	exit(EXIT_FAILURE);
-    }
-    
-    // Page Table initialisieren
-    for(int i = 0; i < VMEM_NPAGES; i++) {
-	vmem->pt.entries[i].flags = 0;
-	
-	// TODO: braucht man dies hier wirklich?
-	// vmem->pt.entries[i].flags &= ~PTF_PRESENT;
-	// vmem->pt.entries[i].flags &= ~PTF_DIRTY;
-	// vmem->pt.entries[i].flags &= ~PTF_USED;
-
-	vmem->pt.entries[i].frame = VOID_IDX;
-    }
-    
-    // Fragepage initialisieren
-    for(int i = 0; i < VMEM_NFRAMES; i++) {
-	vmem->pt.framepage[i] = VOID_IDX;
-    }
-      
-    // data initialisieren
-    for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
-	vmem->data[i] = VOID_IDX;
-    }
-    
-    DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
-}
-/*void vmem_init(void) {
-	int i;
-	shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);			//SHMKEY = vmem.h, O_CREAT = if the file does not exist it will be create
-	if(!shared_memory_file_desc) {									//O_RDWR = Write and Read
-		perror("Shared Memory konnte nicht erstellt werden");
-	}
-
-	if( ftruncate(shared_memory_file_desc, SHMSIZE) == -1) {
-		perror("Shared Memory konnte nicht erstellt werden");
-	}
-
-	vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
-	if(!vmem){
-		perror("Shared Memory konnte nicht erstellt werden");
-	}
-    
-	vmem->adm.size = 0;										
-	vmem->adm.mmanage_pid = getpid();
-	vmem->adm.shm_id = VOID_IDX;
-	vmem->adm.req_pageno = VOID_IDX;
-	vmem->adm.next_alloc_idx = 0;
-	vmem->adm.pf_count = 0;
-	// vmem->adm.g_count = VOID_IDX;
-    
-	
-	for(i=0; i<VMEM_NPAGES; i++) {
-		vmem->pt.entries[i].flags = 0;
-		vmem->pt.entries[i].flags &= ~PTF_PRESENT;
-		vmem->pt.entries[i].flags &= ~PTF_DIRTY;
-		vmem->pt.entries[i].flags &= ~PTF_USED;
-
-		vmem->pt.entries[i].frame = VOID_IDX;
-	}
-	
-	
-	for(i=0; i<VMEM_NFRAMES; i++) {
-		vmem->pt.framepage[i] = VOID_IDX;
-	}
-	
-	
-	for(i=0; i<VMEM_NFRAMES * VMEM_PAGESIZE; i++) {
-		vmem->data[i] = VOID_IDX;
-	}
-}*/
-
 void sighandler(int signo) {
     
 	if(signo == SIGUSR1) {
@@ -453,6 +334,59 @@ void open_logfile(){
         exit(EXIT_FAILURE);
     }
     DEBUG(fprintf(stderr, "Logfile created!\n"));
+}
+
+
+void vmem_init(){
+    shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    if(!shared_memory_file_desc) {
+	perror("Shared Memory creation failed!");
+	exit(EXIT_FAILURE);
+    }
+    if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
+	perror("Shared Memory creation(truncate) failed!");
+	exit(EXIT_FAILURE);
+    }
+
+    vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
+    if(!vmem){
+	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
+	exit(EXIT_FAILURE);
+    }
+    DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
+    
+    // fill vmem with intial NULL-Data
+    vmem->adm.size = 0;										
+    vmem->adm.mmanage_pid = getpid();
+    vmem->adm.shm_id = VOID_IDX;
+    vmem->adm.req_pageno = VOID_IDX;
+    vmem->adm.next_alloc_idx = 0;
+    vmem->adm.pf_count = 0;
+    
+    // Semaphor initialisieren
+    int sem = sem_init(&vmem->adm.sema, 1, 1);
+    if(sem != 0) {
+	perror("Semaphor initialization failed!");
+	exit(EXIT_FAILURE);
+    }
+    
+    // Page Table initialisieren
+    for(int i = 0; i < VMEM_NPAGES; i++) {
+	vmem->pt.entries[i].flags = 0;
+	vmem->pt.entries[i].frame = VOID_IDX;
+    }
+    
+    // Fragepage initialisieren
+    for(int i = 0; i < VMEM_NFRAMES; i++) {
+	vmem->pt.framepage[i] = VOID_IDX;
+    }
+      
+    // data initialisieren
+    for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
+	vmem->data[i] = VOID_IDX;
+    }
+    
+    DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
 }
 
 /* Do not change!  */
