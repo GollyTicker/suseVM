@@ -1,0 +1,38 @@
+
+
+alias c="clear"
+alias r="./run.sh"
+alias c1="./cmpclock1.sh"
+alias c2="./cmpclock2.sh"
+alias fifo="./cmpfifo.sh"
+alias ki="killall -9 mmanage"
+
+
+
+
+PROTOKOLL: TODO:
+
+alte git commits vor dem samstag durchgehen und hinzufügen
+
+
+
+Protokoll
+
+zuerst vmem.h ausführlich durchgehen und paralellenen zwischen
+dem theoretischen Stoff aus der Vorlesung und den von
+Fohl zur Verfügung gestellten Datenstrukturen ziehen
+-> Siehe Kommentare in vmem.h
+
+danach mmanage.h verstehen:
+
+SIGUSR1 wird von vmaccess.c aufgerufen
+
+with "killall -9 mmanage" werden alle
+vorher gestarteten Prozesse gestoppt
+
+wer ruft aber genau SIGUSR2 auf?
+sollenw ir es selber ab und zu aufrufen?
+
+TODO: Ablaufdiagramm schreiben/Pseudocode,
+        welches zeigt wer was wann wie macht
+    Orientierung an den Deklarationen von mmanage.h
