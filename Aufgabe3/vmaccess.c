@@ -127,7 +127,6 @@ void vmem_write(int address, int data) {
     // check whether the page is currently loaded
     int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
     
-    
     if (!req_page_is_loaded) {
 	// DEBUG(fprintf(stderr, "Pagefult for writing!\n"));
 	kill(vmem->adm.mmanage_pid, SIGUSR1);
