@@ -226,7 +226,7 @@ void sighandler(int signo) {
   }
   
   
-int find_remove_frame(void) {
+/*int find_remove_frame(void) {
 	int frame;
 
 	if(!vmem_is_full()) {
@@ -237,13 +237,43 @@ int find_remove_frame(void) {
 	else {
 		frame = find_remove_fifo();
 	}
-#endif /* FIFO */
+#endif
 #ifdef CLOCK
 	else {
 		frame = find_remove_clock();
 	}
-#endif /* CLOCK */
+#endif
 	return frame;
+}*/
+
+int find_remove_frame(){
+    int frame = VOID_IDX;
+    if(!vmem_is_full()) {
+	frame = vmem->adm.size;
+	vmem->adm.size += 1;
+	DEBUG(fprintf(stderr, "New Frame: %d (by free space)\n", frame));
+    }
+    else {
+	frame = use_algorithm();
+	DEBUG(fprintf(stderr, "New Frame: %d (by algorithm)\n", frame));
+    }
+    
+    if(frame == VOID_IDX) {
+	DEBUG(fprintf(stderr, "<================= FAIL returned Frame is -1 ==============>\n"));
+    }
+    return frame;
+}
+
+int use_algorithm() {
+#ifdef FIFO
+    return find_remove_fifo();
+#endif
+#ifdef CLOCK
+    return find_remove_clock();
+#endif
+#ifdef CLOCK2
+    return find_remove_clock2();
+#endif
 }
 
 int find_remove_fifo(void) {	
