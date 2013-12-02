@@ -119,14 +119,7 @@ void signal_proccessing_loop() {
     while(1) {
 	signal_number = 0;
 	pause();
-	if(signal_number == SIGUSR1) {  /* Page fault */
-	  char *msg = "Processed SIGUSR1\n";
-	  noticed(msg);
-	  
-	  //page_fault();
-	  
-	}
-	else if(signal_number == SIGUSR2) {     /* PT dump */
+	if(signal_number == SIGUSR2) {     /* PT dump */
 	  char *msg = "Processed SIGUSR2\n";
 	  noticed(msg);
 	  dump_vmem_structure();
@@ -144,54 +137,51 @@ void signal_proccessing_loop() {
     }
 }
 
+
+void page_fault() {
+    int page_unloaded = VOID_IDX;
+    int new_frame = VOID_IDX;
+    int req_page = vmem->adm.req_pageno;
+    
+    // Page fault aufgetreten
+    DEBUG(fprintf(stderr, "Pagefault: Requested Page: %d\n", req_page));
+    
+    vmem->adm.pf_count++;
+    
+    new_frame = find_remove_frame();
+    
+    page_unloaded = vmem->pt.framepage[new_frame];
+    
+    if( vmem_is_full() ) {
+	store_page(page_unloaded);
+    }
+    update_pt(new_frame);
+    
+    fetch_page(req_page);
+    
+    
+    // make Logs
+    struct logevent le;
+    le.req_pageno = vmem->adm.req_pageno;
+    le.replaced_page = page_unloaded;
+    le.alloc_frame = new_frame;
+    le.pf_count = vmem->adm.pf_count;
+    le.g_count = 0;
+    logger(le);
+    
+    DEBUG(fprintf(stderr, "Page loaded. pf_count: %d\n", vmem->adm.pf_count));
+    
+    // Den aufrufenden Freigeben
+    sem_post(&vmem->adm.sema);
+}
+
 void sighandler(int signo) {
     signal_number = signo;
 	if(signo == SIGUSR1) {
-				
-		struct logevent le;
-		int frame;
-		int oldpage;
-		
-		/* Page Fault Counter erhoehen */
-		vmem->adm.pf_count++;
-		
-#ifdef DEBUG_MESSAGES
-		fprintf(stderr, "Requested Page: %d\n", vmem->adm.req_pageno);
-#endif /* DEBUG_MESSAGES */
-		
-		/* freien frame suchen */
-		frame = find_remove_frame();
-
-#ifdef DEBUG_MESSAGES
-		fprintf(stderr, "Free Frame: %d\n", frame);
-#endif /* DEBUG_MESSAGES */
-		oldpage = vmem->pt.framepage[frame];
-			
-		/* page speichern */
-		if(vmem_is_full()) {
-			if((vmem->pt.entries[oldpage].flags & PTF_DIRTY) == PTF_DIRTY) {
-				store_page(vmem->pt.framepage[frame]);
-			}	
-		}
-		
-		/* Pagetable aktualisieren */
-		update_pt(frame);
-		
-		/* Page aus Pagefile holen */
-		fetch_page(vmem->adm.req_pageno);
-		
-		/* Logging */
-		le.req_pageno = vmem->adm.req_pageno;
-		le.replaced_page = oldpage;
-		le.alloc_frame = frame;
-		le.pf_count = vmem->adm.pf_count;
-		
-		le.g_count = 0;	// <- Was heißt g_count?
-		
-		logger(le);
-		
-        /* Semaphor freigeben */
-		sem_post(&vmem->adm.sema);
+	  char *msg = "Processed SIGUSR1\n";
+	  noticed(msg);
+	  
+	  page_fault();
 	}
   }
 void dump_vmem_structure() {
@@ -268,7 +258,6 @@ void increment_alloc_idx(int alloc_idx) {
     vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
 }
 
-
 int find_remove_clock() {
     int frame;
     int done = 0;
@@ -315,7 +304,6 @@ void fetch_page(int page) {
     }
 }
 
-
 int find_remove_clock2() {
     int frame;
     int done = 0;
@@ -353,18 +341,6 @@ int find_remove_clock2() {
     return frame;
 }
 
-/*void update_pt(int frame) {
-	int oldpage = vmem->pt.framepage[frame];
-
-	vmem->pt.entries[oldpage].flags &= ~PTF_PRESENT;
-	vmem->pt.entries[oldpage].flags &= ~PTF_DIRTY;
-	vmem->pt.entries[oldpage].flags &= ~PTF_USED;
-	vmem->pt.entries[oldpage].frame  =  VOID_IDX;
-
-	vmem->pt.framepage[frame] = vmem->adm.req_pageno;
-	vmem->pt.entries[vmem->adm.req_pageno].frame = frame;
-	vmem->pt.entries[vmem->adm.req_pageno].flags |= PTF_PRESENT;
-}*/
 void update_pt(int frame){
     // unset old page
     int oldpage = vmem->pt.framepage[frame];
