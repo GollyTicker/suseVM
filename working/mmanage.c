@@ -58,40 +58,6 @@ int
     
     /* Setup signal handler */
     /* Handler for USR1 */
-    /*sigact.sa_handler = sighandler;
-    sigemptyset(&sigact.sa_mask);
-    sigact.sa_flags = 0;
-    if(sigaction(SIGUSR1, &sigact, NULL) == -1) {
-        perror("Error installing signal handler for USR1");
-        exit(EXIT_FAILURE);
-    }
-#ifdef DEBUG_MESSAGES
-    else {
-        fprintf(stderr, "USR1 handler successfully installed\n");
-    }
-#endif
-
-    if(sigaction(SIGUSR2, &sigact, NULL) == -1) {
-        perror("Error installing signal handler for USR2");
-        exit(EXIT_FAILURE);
-    }
-#ifdef DEBUG_MESSAGES
-    else {
-        fprintf(stderr, "USR2 handler successfully installed\n");
-    }
-#endif
-
-    if(sigaction(SIGINT, &sigact, NULL) == -1) {
-        perror("Error installing signal handler for INT");
-        exit(EXIT_FAILURE);
-    }
-#ifdef DEBUG_MESSAGES
-    else {
-        fprintf(stderr, "INT handler successfully installed\n");
-    }
-#endif*/
-    /* Setup signal handler */
-    /* Handler for USR1 */
     sigact.sa_handler = sighandler;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
@@ -291,37 +257,6 @@ int find_remove_clock() {
     
     return frame;
 }
-/*
-int find_remove_clock(void) {	
-	int frame;
-	int done = 0;
-	
-	while(!done) {
-		if((vmem->pt.entries[vmem->pt.framepage[vmem->adm.next_alloc_idx]].flags & PTF_USED) == PTF_USED) {
-			vmem->pt.entries[vmem->pt.framepage[vmem->adm.next_alloc_idx]].flags &= ~PTF_USED;
-			if(vmem->adm.next_alloc_idx == VMEM_NFRAMES-1) {
-				vmem->adm.next_alloc_idx = 0;
-			} else {
-				vmem->adm.next_alloc_idx++;
-			}
-		} else {
-			frame = vmem->adm.next_alloc_idx;
-			done = 1;
-		}
-		
-	}
-	
-	if(vmem->adm.next_alloc_idx == VMEM_NFRAMES-1) {
-		vmem->adm.next_alloc_idx = 0;
-	} else {
-		vmem->adm.next_alloc_idx++;
-	}
-	
-#ifdef DEBUG_MESSAGES
-	fprintf(stderr, "Allocating %d\n", frame);
-#endif
-	return frame;
-}*/
 
 void fetch_page(int pt_idx) {
 	int count;
@@ -345,6 +280,44 @@ void store_page(int pt_idx) {
 		perror("Konnte Page nicht schreiben");
 		exit(EXIT_FAILURE);
 	}
+}
+
+
+int find_remove_clock2() {
+    int frame;
+    int done = 0;
+    
+    while(!done) {
+	int alloc_idx = vmem->adm.next_alloc_idx;
+	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
+	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
+	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
+	
+	// falls das used bit gesetzt ist. dann veringerre es (oder das zweite used bit)
+	// sonst nehme diesen frame
+	if(is_frame_flag_used) {
+	    int is_second_frame_flag_used = (flags & PTF_USED1) == PTF_USED1;
+	    // falls auch das zweite gesetzt ist,
+	    // dann loesche das zweite bit. sonst loesche das erste bit
+	    if( is_second_frame_flag_used ) {
+		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED1;
+	    }
+	    else {
+		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
+	    }
+	    
+	    // counter erhoehen, um
+	    // in der naechsten iteration den naechsten frame zu  betrachten
+	    increment_alloc_idx(alloc_idx);
+	}
+	else {
+	    frame = alloc_idx;
+	    done = 1;
+	}
+    }
+    increment_alloc_idx(vmem->adm.next_alloc_idx);
+    
+    return frame;
 }
 
 void update_pt(int frame) {
