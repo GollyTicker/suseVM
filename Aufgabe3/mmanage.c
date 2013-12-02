@@ -159,12 +159,10 @@ void page_fault() {
     le.g_count = vmem->adm.pf_count;
     logger(le);
     
-    DEBUG(fprintf(stderr, "almost fin\n"));
-    
+    DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
     
     // Den aufrufenden Freigeben
     sem_post(&vmem->adm.sema);
-    DEBUG(fprintf(stderr, "Page loaded. pf_count=%d\n", vmem->adm.pf_count));
 }
 
 int vmem_is_full() {
@@ -222,7 +220,6 @@ int use_algorithm() {
     return find_remove_clock2();
 #endif
 }
-
 
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
