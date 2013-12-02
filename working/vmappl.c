@@ -64,12 +64,14 @@ void
 quicksort(int l, int r)
 {
     if(l < r) {
-        int i = l - 1;
-        int j = r;
+        int i = l;
+        int j = r - 1;
         while(1) {      /* Put all elements < [r] to the left */
-            while(vmem_read(++i) < vmem_read(r)) {
+            while(vmem_read(i) < vmem_read(r)) {
+                i++;
             }
-            while(vmem_read(--j) > vmem_read(r)) {
+            while((vmem_read(j) >= vmem_read(r)) && (j > l)) {
+                j--;
             }
             if(i >= j) {
                 break;
