@@ -369,13 +369,13 @@ void vmem_init(){
     vmem->adm.pf_count = 0;
     
     // Semaphor initialisieren
-    int sem = sem_init(&vmem->adm.sema, 0, 0);
+    int sem = sem_init(&vmem->adm.sema, 1, 1);
     if(sem != 0) {
 	perror("Semaphor initialization failed!");
 	exit(EXIT_FAILURE);
     }
     
-    // Page Tabke initialisieren
+    // Page Table initialisieren
     for(int i = 0; i < VMEM_NPAGES; i++) {
 	vmem->pt.entries[i].flags = 0;
 	
