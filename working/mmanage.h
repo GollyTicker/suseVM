@@ -57,9 +57,7 @@ int find_remove_clock(void);
 
 int find_remove_clock2(void);
 
-// int search_bitmap(void);
-
-// int find_free_bit(Bmword bmword, Bmword mask);
+void signal_proccessing_loop(void);
 
 // opens pagefile and maybe fills
 // it with random data for easier debugging

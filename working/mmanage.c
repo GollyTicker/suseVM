@@ -85,31 +85,66 @@ int
         DEBUG(fprintf(stderr, "INT handler successfully installed\n"));
     }
     
-    /* Signal processing loop */
+    signal_proccessing_loop();
+    
+    /*
     while(1) {
         signal_number = 0;
         pause();
-        if(signal_number == SIGUSR1) {  /* Page fault */
+        if(signal_number == SIGUSR1) {
 #ifdef DEBUG_MESSAGES
             fprintf(stderr, "Processed SIGUSR1\n");
-#endif /* DEBUG_MESSAGES */
+#endif
             signal_number = 0;
         }
-        else if(signal_number == SIGUSR2) {     /* PT dump */
+        else if(signal_number == SIGUSR2) {
 #ifdef DEBUG_MESSAGES
             fprintf(stderr, "Processed SIGUSR2\n");
-#endif /* DEBUG_MESSAGES */
+#endif
             signal_number = 0;
         }
         else if(signal_number == SIGINT) {
 #ifdef DEBUG_MESSAGES
             fprintf(stderr, "Processed SIGINT\n");
-#endif /* DEBUG_MESSAGES */
+#endif
         }
-    }
+    }*/
 
 
     return 0;
+}
+
+void signal_proccessing_loop() {
+    DEBUG(fprintf(stderr, "Memory Manager: pid(%d)\n", getpid()));
+    DEBUG(fprintf(stderr, "Memory Manager running...\n"));
+    while(1) {
+	signal_number = 0;
+	pause();
+	if(signal_number == SIGUSR1) {  /* Page fault */
+	  char *msg = "Processed SIGUSR1\n";
+	  noticed(msg);
+	  
+	  //page_fault();
+	  
+	}
+	else if(signal_number == SIGUSR2) {     /* PT dump */
+	  char *msg = "Processed SIGUSR2\n";
+	  noticed(msg);
+	  
+	  //dump_vmem_structure();
+	  
+	}
+	else if(signal_number == SIGINT) {
+	  char *msg = "Processed SIGINT\n";
+	  noticed(msg);
+	  // cleanup();
+	  break;
+	}
+	else {
+	  DEBUG(fprintf(stderr, "Unknown Signal: %d\n", signal_number));
+	  signal_number = 0;
+	}
+    }
 }
 
 void sighandler(int signo) {
@@ -190,6 +225,12 @@ void sighandler(int signo) {
 		exit(EXIT_SUCCESS);
     }
   }
+
+
+void noticed(char *msg) {
+    DEBUG(fprintf(stderr, msg));
+    signal_number = 0;
+}
 
 int find_remove_frame(){
     int frame = VOID_IDX;
