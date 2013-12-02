@@ -198,15 +198,15 @@ int find_remove_frame(){
     if(!vmem_is_full()) {
 	vmem->adm.size += 1;
 	frame = vmem->adm.size;
-	DEBUG(fprintf(stderr, "New Frame: %d\n", frame));
+	DEBUG(fprintf(stderr, "New Frame: %d (by free space)\n", frame));
     }
     else {
 	frame = use_algorithm();
-	DEBUG(fprintf(stderr, "used algorithm Frame: %d\n", frame));
+	DEBUG(fprintf(stderr, "New Frame: %d (by algorithm)\n", frame));
     }
     
-    if(frame==-1) {
-	DEBUG(fprintf(stderr, "<================= fail Frame is -1 ==============>\n"));
+    if(frame == VOID_IDX) {
+	DEBUG(fprintf(stderr, "<================= FAIL returned Frame is -1 ==============>\n"));
     }
     return frame;
 }
