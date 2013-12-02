@@ -51,22 +51,34 @@ void vm_init(){
 int vmem_read(int address) {
     vm_init_if_not_ready();
     
-    int data;
-    int page = address/VMEM_PAGESIZE;					/* Ermitlung der Pagenummer */
-    int offset = address%VMEM_PAGESIZE;					/* Ermittlung des Offsets */
+    int result;
+    // page und offset berechnen.
+    int page = address / VMEM_PAGESIZE;
+    int offset = address % VMEM_PAGESIZE;				/* Ermittlung des Offsets */
 
+    // verwendete page vermerken
+    // damit im Falle eines Pagefaults
+    // mmanage diese Page laden kann
     vmem->adm.req_pageno = page;						/* Angeforderte Seite */
     
-    sem_wait(&vmem->adm.sema);
-    if((vmem->pt.entries[page].flags & PTF_PRESENT) == PTF_PRESENT) {	/* Ist die Seite im Speicher? */
-	data = read_page(page, offset);					/* Wenn ja, Seite lesen */
-    } else {								/* Wenn nein, Seite anfordern */
-	kill(vmem->adm.mmanage_pid, SIGUSR1);				/* Sende Signal an mmanage*/
-	sem_wait(&vmem->adm.sema);					/* Warte bis mmanage den Semaphor freigibt */
-	data = read_page(page, offset);					/* Page lesen*/
+    sem_wait(&vmem->adm.sema);	// <- verhindert komischen freeze
+    
+    
+    int flags = vmem->pt.entries[page].flags;
+    // check whether the page is currently loaded
+    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    
+    if (!req_page_is_loaded) {
+	// DEBUG(fprintf(stderr, "Pagefult for reading!\n"));
+	kill(vmem->adm.mmanage_pid, SIGUSR1);
+	sem_wait(&vmem->adm.sema);
     }
-    sem_post(&vmem->adm.sema);
-    return data;
+    
+    result = read_page(page, offset);
+    
+    sem_post(&vmem->adm.sema);	// <- verhindert komischen freeze
+    
+    return result;
 }
 
 int read_page(int page, int offset) {	
@@ -102,6 +114,7 @@ void vmem_write(int address, int data) {
     vmem->adm.req_pageno = page;
     
     sem_wait(&vmem->adm.sema); // <- thanks @ eine andere gruppe
+    
     int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
     int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
