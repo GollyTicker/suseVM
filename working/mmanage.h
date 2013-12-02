@@ -9,15 +9,23 @@
 #include "vmem.h"
 #include <limits.h>
 
-/* Event struct for logging */
-struct logevent
-{
+/** Event struct for logging */
+// Die zu loggenden Daten werden jedesmal
+// hier reingeschrieben bevordie
+// loggerfunktion aufgerufen wird.
+struct logevent {
     int req_pageno;
     int replaced_page;
     int alloc_frame;
     int pf_count;
     int g_count;
 };
+
+// before anything happens,
+// the main method here is called
+// which opens the pagefile and the logfile
+// initializes the virtual memory (shared memory)
+// and then wiats for the signals
 
 /* Prototypes */
 void sighandler(int signo);
