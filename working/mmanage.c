@@ -353,7 +353,7 @@ int find_remove_clock2() {
     return frame;
 }
 
-void update_pt(int frame) {
+/*void update_pt(int frame) {
 	int oldpage = vmem->pt.framepage[frame];
 
 	vmem->pt.entries[oldpage].flags &= ~PTF_PRESENT;
@@ -364,6 +364,31 @@ void update_pt(int frame) {
 	vmem->pt.framepage[frame] = vmem->adm.req_pageno;
 	vmem->pt.entries[vmem->adm.req_pageno].frame = frame;
 	vmem->pt.entries[vmem->adm.req_pageno].flags |= PTF_PRESENT;
+}*/
+void update_pt(int frame){
+    // unset old page
+    int oldpage = vmem->pt.framepage[frame];
+    DEBUG(fprintf(stderr, "Update Table: Oldpage: %d OldFrame: %d\n", oldpage, frame));
+    update_unload(oldpage);
+    
+    // update loaded state
+    update_load(frame);
+}
+
+void update_unload(int oldpage) {
+    // delete all flags
+    vmem->pt.entries[oldpage].flags = 0;
+    
+    // dazugehoerigen frame reference entfernen
+    vmem->pt.entries[oldpage].frame = VOID_IDX;
+    
+}
+
+void update_load(int frame) {
+    int req_page = vmem->adm.req_pageno;
+    vmem->pt.framepage[frame] = req_page;
+    vmem->pt.entries[req_page].frame = frame;
+    vmem->pt.entries[req_page].flags |= PTF_PRESENT;
 }
 
 int vmem_is_full() {
