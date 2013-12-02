@@ -49,24 +49,24 @@ void vm_init(){
 }
 
 int vmem_read(int address) {
-	vm_init_if_not_ready();
-	
-	int data;
-	int page = address/VMEM_PAGESIZE;					/* Ermitlung der Pagenummer */
-	int offset = address%VMEM_PAGESIZE;					/* Ermittlung des Offsets */
+    vm_init_if_not_ready();
+    
+    int data;
+    int page = address/VMEM_PAGESIZE;					/* Ermitlung der Pagenummer */
+    int offset = address%VMEM_PAGESIZE;					/* Ermittlung des Offsets */
 
-	vmem->adm.req_pageno = page;						/* Angeforderte Seite */
-	
-	sem_wait(&vmem->adm.sema);
-	if((vmem->pt.entries[page].flags & PTF_PRESENT) == PTF_PRESENT) {	/* Ist die Seite im Speicher? */
-		data = read_page(page, offset);					/* Wenn ja, Seite lesen */
-	} else {								/* Wenn nein, Seite anfordern */
-		kill(vmem->adm.mmanage_pid, SIGUSR1);				/* Sende Signal an mmanage*/
-		sem_wait(&vmem->adm.sema);					/* Warte bis mmanage den Semaphor freigibt */
-		data = read_page(page, offset);					/* Page lesen*/
-	}
-	sem_post(&vmem->adm.sema);
-	return data;
+    vmem->adm.req_pageno = page;						/* Angeforderte Seite */
+    
+    sem_wait(&vmem->adm.sema);
+    if((vmem->pt.entries[page].flags & PTF_PRESENT) == PTF_PRESENT) {	/* Ist die Seite im Speicher? */
+	data = read_page(page, offset);					/* Wenn ja, Seite lesen */
+    } else {								/* Wenn nein, Seite anfordern */
+	kill(vmem->adm.mmanage_pid, SIGUSR1);				/* Sende Signal an mmanage*/
+	sem_wait(&vmem->adm.sema);					/* Warte bis mmanage den Semaphor freigibt */
+	data = read_page(page, offset);					/* Page lesen*/
+    }
+    sem_post(&vmem->adm.sema);
+    return data;
 }
 
 int read_page(int page, int offset) {	
@@ -91,22 +91,30 @@ void countUsed(int page) {
 }
 
 void vmem_write(int address, int data) {
-	vm_init_if_not_ready();
-	
-	int page = address/VMEM_PAGESIZE;
-	int offset = address%VMEM_PAGESIZE;
-	
-	vmem->adm.req_pageno = page;
-	
+    vm_init_if_not_ready();
+    // page und offset berechnen.
+    int page = address / VMEM_PAGESIZE;
+    int offset = address % VMEM_PAGESIZE;
+    
+    // verwendete page vermerken
+    // damit im Falle eines Pagefaults
+    // mmanage diese Page laden kann
+    vmem->adm.req_pageno = page;
+    
+    sem_wait(&vmem->adm.sema); // <- thanks @ eine andere gruppe
+    int flags = vmem->pt.entries[page].flags;
+    // check whether the page is currently loaded
+    int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
+    
+    if (!req_page_is_loaded) {
+	// DEBUG(fprintf(stderr, "Pagefult for writing!\n"));
+	kill(vmem->adm.mmanage_pid, SIGUSR1);
 	sem_wait(&vmem->adm.sema);
-	if((vmem->pt.entries[page].flags & PTF_PRESENT) == PTF_PRESENT) {
-		write_page(page, offset, data);								/* Seite schreiben */
-	} else {
-		kill(vmem->adm.mmanage_pid, SIGUSR1);
-		sem_wait(&vmem->adm.sema);
-		write_page(page, offset, data);								/* Seite schreiben */
-	}
-	sem_post(&vmem->adm.sema);
+    }
+    
+    write_page(page, offset, data);
+    
+    sem_post(&vmem->adm.sema); // <- thanks @ eine andere gruppe
 }
 
 void write_page(int page, int offset, int data) {
