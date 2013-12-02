@@ -1,7 +1,7 @@
 /* Header file for vmappl.c
  * File: vmappl.h
  * Prof. Dr. Wolfgang Fohl, HAW Hamburg
- * 2010
+ * 2013
  */
 
 #ifndef VMAPPL_H
@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include "vmaccess.h"
 
-#define SEED 201203
+#define SEED 290913
 #define LENGTH 550
 #define RNDMOD 1000
 

@@ -54,12 +54,12 @@ int vmem_read(int address) {
     int result;
     // page und offset berechnen.
     int page = address / VMEM_PAGESIZE;
-    int offset = address % VMEM_PAGESIZE;				/* Ermittlung des Offsets */
+    int offset = address % VMEM_PAGESIZE;
 
     // verwendete page vermerken
     // damit im Falle eines Pagefaults
     // mmanage diese Page laden kann
-    vmem->adm.req_pageno = page;						/* Angeforderte Seite */
+    vmem->adm.req_pageno = page;
     
     sem_wait(&vmem->adm.sema);	// <- verhindert komischen freeze
     
