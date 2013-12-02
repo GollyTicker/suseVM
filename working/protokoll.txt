@@ -7,6 +7,18 @@ alias c2="./cmpclock2.sh"
 alias fifo="./cmpfifo.sh"
 alias ki="killall -9 mmanage"
 
+Zum Entwickeln:
+drei tabs im bash:
+1. hier wird nur ./vmappl ausgeführt und evtl. mit c geleart
+2. hier wird mit r erneut gestartet und nach dem beenden vom ./mmanage mit Ctrl+C mit fifo/c1/c2 der Unterschied ermittelt
+3. nur hier werden git anweisungen durchgeführt
+
+Vorgehensweise:
+Tab 2: mit r starten
+Tagb 1: mit ./vmappl ausführen
+Tab 2: beenden
+Tab 2: vergleichen
+Tab 3: commiten oder Dateien veränderen
 
 
 
