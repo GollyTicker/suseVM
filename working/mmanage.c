@@ -23,8 +23,6 @@ FILE *pagefile = NULL;
 FILE *logfile = NULL;
 int signal_number = 0;
 
-
-// http://linux.die.net/man/3/shm_open
 int shared_memory_file_desc;
 
 
@@ -123,7 +121,7 @@ void page_fault() {
     
     page_unloaded = vmem->pt.framepage[new_frame];
     
-    if( vmem_is_full() ) {
+    if( frames_are_occupied() ) {
 	store_page(page_unloaded);
     }
     update_pt(new_frame);
@@ -193,7 +191,7 @@ void noticed(char *msg) {
 
 int find_remove_frame(){
     int frame = VOID_IDX;
-    if(!vmem_is_full()) {
+    if(!frames_are_occupied()) {
 	frame = vmem->adm.size;
 	vmem->adm.size += 1;
 	DEBUG(fprintf(stderr, "New Frame: %d (by free space)\n", frame));
@@ -241,10 +239,10 @@ int find_remove_clock() {
 	int alloc_idx = vmem->adm.next_alloc_idx;
 	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
 	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
-	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
+	int is_frame_flag_used = (flags & PTF_USEDBIT1) == PTF_USEDBIT1;
 	
 	if(is_frame_flag_used) {
-	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
+	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT1;
 	    rotate_alloc_idx();
 	}
 	else {
@@ -285,7 +283,7 @@ int find_remove_clock2() {
 	int alloc_idx = vmem->adm.next_alloc_idx;
 	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
 	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
-	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
+	int is_frame_flag_used = (flags & PTF_USEDBIT1) == PTF_USEDBIT1;
 	
 	// if the first USED bit is set, then either delete
 	// the second used bit or the first used bit.
@@ -299,7 +297,7 @@ int find_remove_clock2() {
 		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT2;
 	    }
 	    else {
-		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
+		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT1;
 	    }
 	    
 	    // the counter is being rotated
@@ -344,7 +342,7 @@ void update_load(int frame) {
     vmem->pt.entries[req_page].flags |= PTF_PRESENT;
 }
 
-int vmem_is_full() {
+int frames_are_occupied() {
     return (vmem->adm.size >= VMEM_NFRAMES);
 }
 
@@ -382,6 +380,7 @@ void open_logfile(){
 
 
 void vmem_init(){
+    // http://linux.die.net/man/3/shm_open
     shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if(!shared_memory_file_desc) {
 	perror("Shared Memory creation failed!\n");

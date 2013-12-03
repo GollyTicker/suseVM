@@ -17,9 +17,7 @@
 
 
 /** Event struct for logging */
-// Die zu loggenden Daten werden jedesmal
-// hier reingeschrieben bevordie
-// loggerfunktion aufgerufen wird.
+// struct for the logging event
 struct logevent {
     int req_pageno;
     int replaced_page;
@@ -57,6 +55,7 @@ int find_remove_clock2(void);
 
 void signal_proccessing_loop(void);
 
+// checks if a SIGUSR1 was caught and calls page_fault()
 void case_page_fault(void);
 
 // opens pagefile and maybe fills
@@ -69,11 +68,11 @@ void open_logfile();
 // the process is ending
 void cleanup();
 
-int vmem_is_full();
+// returns whether all frames are already occupied
+int frames_are_occupied();
 
 // log everthing given in this logevent
 void logger(struct logevent le);
-
 
 // print debug statement that we noticed a
 // signal and reset signal number
@@ -87,8 +86,6 @@ void page_fault();
 void rotate_alloc_idx();
 
 void dump_vmem_structure();
-
-
 
 /* Misc */
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */

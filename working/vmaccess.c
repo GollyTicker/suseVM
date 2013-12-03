@@ -94,12 +94,12 @@ int calcIndexFromPageOffset(int page, int offset) {
 
 void countUsed(int page) {
     // if USED bit 1 is already set, then set the second used bit.
-    int used_1_is_set = vmem->pt.entries[page].flags & PTF_USED;
+    int used_1_is_set = vmem->pt.entries[page].flags & PTF_USEDBIT1;
     if(used_1_is_set) {
 	vmem->pt.entries[page].flags |= PTF_USEDBIT2;
     }
     // the first used bit is always set
-    vmem->pt.entries[page].flags |= PTF_USED;
+    vmem->pt.entries[page].flags |= PTF_USEDBIT1;
 }
 
 void vmem_write(int address, int data) {

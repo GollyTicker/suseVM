@@ -5,8 +5,8 @@ LRT := -lrt # lrt -> for shared memory open
 SOURCE_FLAGS := -D_XOPEN_SOURCE=600 #need because ipc.h requires functions from XOPEN_SOURCE library
 
 #CCFLAGS += -DFIFO
-#CCFLAGS += -DCLOCK
-CCFLAGS += -DCLOCK2
+CCFLAGS += -DCLOCK
+#CCFLAGS += -DCLOCK2
 
 #CCFLAGS += -DDEBUG_MESSAGES
 
