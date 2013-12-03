@@ -122,7 +122,7 @@ void write_page(int page, int offset, int data) {
     
     // mark the change and to make sure it'll be updated
     // into the pagefile.bin
-    vmem->pt.entries[page].flags |= PTF_DIRTY;
+    vmem->pt.entries[page].flags |= PTF_CHANGED;
     
     int index = calcIndexFromPageOffset(page, offset);
     // DEBUG(fprintf(stderr, "Write: Page: %d Offset: %d Data: %d\n", page, offset, data));

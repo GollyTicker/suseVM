@@ -58,7 +58,7 @@ typedef unsigned int Bmword;    /* Frame bitmap */
 // says whether the page is currently loaded or not.
 #define PTF_PRESENT     1
 
-#define PTF_DIRTY       2       /* store: need to write */
+#define PTF_CHANGED       2       /* store: need to write */
 
 // CLOCK ALGO 1 und 2 - the first USED BIT
 #define PTF_USEDBIT1        4       /* For clock algo only */

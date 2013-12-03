@@ -256,13 +256,16 @@ int find_remove_clock() {
 }
 
 void store_page(int page) {
-    int frame = vmem->pt.entries[page].frame;
-    // scrool to the position to write into
-    fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
-    int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
-    if(written_ints != VMEM_PAGESIZE) {
-	perror("Not everything could be written into the page!\n");
-	exit(EXIT_FAILURE);
+    // if the fragme wasnt changed then dont store it.
+    if( ( vmem->pt.entries[page].flags & PTF_CHANGED ) == PTF_CHANGED ) {
+	int frame = vmem->pt.entries[page].frame;
+	// scrool to the position to write into
+	fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
+	int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
+	if(written_ints != VMEM_PAGESIZE) {
+	    perror("Not everything could be written into the page!\n");
+	    exit(EXIT_FAILURE);
+	}
     }
 }
 
