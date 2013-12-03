@@ -1,9 +1,7 @@
-// File for vmaccess.c
-// This file gives vmappl.c the access to the virtual memory
+
 
 #include "vmaccess.h"
 
-// shared memory variable
 struct vmem_struct *vmem = NULL;
 
 
@@ -28,7 +26,7 @@ void vm_init(){
         DEBUG(fprintf(stderr, "shm_open succeeded.\n"));
     }
     
-    // Groesse des gesharten Memory setzten
+    // set size of shared memory
     if( ftruncate(fd, sizeof(struct vmem_struct)) == -1) {
         perror("ftruncate failed! Make sure ./mmanage is running!\n");
         exit(EXIT_FAILURE);
@@ -37,7 +35,7 @@ void vm_init(){
         DEBUG(fprintf(stderr, "ftruncate succeeded.\n"));
     }
 
-    // mach den Shared Memory unter vmem verfuegbar
+    // make shared memory with the variable vmem accissible
     vmem = mmap(NULL, sizeof(struct vmem_struct), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if(!vmem) {
         perror("mapping into vmem failed!\n");
@@ -52,16 +50,16 @@ int vmem_read(int address) {
     vm_init_if_not_ready();
     
     int result;
-    // page und offset berechnen.
+    
+    // calculate page and offset
     int page = address / VMEM_PAGESIZE;
     int offset = address % VMEM_PAGESIZE;
 
-    // verwendete page vermerken
-    // damit im Falle eines Pagefaults
-    // mmanage diese Page laden kann
+    // mark request for the case of a page fault
     vmem->adm.req_pageno = page;
     
-    sem_wait(&vmem->adm.sema);	// <- verhindert komischen freeze
+    // fixes weird bug
+    sem_wait(&vmem->adm.sema);
     
     
     int flags = vmem->pt.entries[page].flags;
@@ -76,7 +74,8 @@ int vmem_read(int address) {
     
     result = read_page(page, offset);
     
-    sem_post(&vmem->adm.sema);	// <- verhindert komischen freeze
+    // fixes weird bug
+    sem_post(&vmem->adm.sema);
     
     return result;
 }
@@ -104,16 +103,15 @@ void countUsed(int page) {
 
 void vmem_write(int address, int data) {
     vm_init_if_not_ready();
-    // page und offset berechnen.
+    
+    // calculate page and offset
     int page = address / VMEM_PAGESIZE;
     int offset = address % VMEM_PAGESIZE;
     
-    // verwendete page vermerken
-    // damit im Falle eines Pagefaults
-    // mmanage diese Page laden kann
+    // mark request for the case of a page fault
     vmem->adm.req_pageno = page;
     
-    sem_wait(&vmem->adm.sema); // <- thanks @ eine andere gruppe
+    sem_wait(&vmem->adm.sema);
     
     int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
@@ -127,7 +125,7 @@ void vmem_write(int address, int data) {
     
     write_page(page, offset, data);
     
-    sem_post(&vmem->adm.sema); // <- thanks @ eine andere gruppe
+    sem_post(&vmem->adm.sema);
 }
 
 void write_page(int page, int offset, int data) {
