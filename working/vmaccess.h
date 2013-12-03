@@ -1,7 +1,6 @@
 /* Header file for vmappl.c
  * File: vmappl.h
  * Prof. Dr. Wolfgang Fohl, HAW Hamburg
- * 2010
  */
 
 #ifndef VMACCESS_H
@@ -28,7 +27,6 @@ int read_page(int frame, int offset);
 
 // check if connected and maybe call vm_init();
 void vm_init_if_not_ready();
-
 
 void countUsed(int page);
 int calcIndexFromPageOffset(int page, int offset);
