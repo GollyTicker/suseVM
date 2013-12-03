@@ -42,7 +42,6 @@ int shared_memory_file_desc;
 int
  main(void)
 {
-    srand(SEED_PF);
     
     struct sigaction sigact;
 
@@ -226,11 +225,11 @@ int use_algorithm() {
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
     // naechsten index weiter rotieren
-    increment_alloc_idx(frame);
+    increment_alloc_idx();
     return frame;
 }
 
-void increment_alloc_idx(int alloc_idx) {
+void increment_alloc_idx() {
     vmem->adm.next_alloc_idx++;
     vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
 }
@@ -247,14 +246,14 @@ int find_remove_clock() {
 	
 	if(is_frame_flag_used) {	// if frame is used. unset it and continue to next.
 	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
-	    increment_alloc_idx(alloc_idx);
+	    increment_alloc_idx();
 	}
 	else {
 	    frame = alloc_idx;
 	    done = 1;
 	}
     }
-    increment_alloc_idx(vmem->adm.next_alloc_idx);
+    increment_alloc_idx();
     
     return frame;
 }
@@ -304,16 +303,17 @@ int find_remove_clock2() {
 		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
 	    }
 	    
-	    // counter erhoehen, um
-	    // in der naechsten iteration den naechsten frame zu  betrachten
-	    increment_alloc_idx(alloc_idx);
+	    // the counter is being rotated
+	    // because the current observed frame
+	    // wasn't taken
+	    increment_alloc_idx();
 	}
 	else {
 	    frame = alloc_idx;
 	    done = 1;
 	}
     }
-    increment_alloc_idx(vmem->adm.next_alloc_idx);
+    increment_alloc_idx();
     
     return frame;
 }
@@ -350,34 +350,35 @@ int vmem_is_full() {
 }
 
 void init_pagefile(const char *pfname) {
+    srand(SEED_PF);
     int NoOfElements = VMEM_NPAGES*VMEM_PAGESIZE;
     int data[NoOfElements];
-    // mit random fuellen. wir verwenden unser eigenes random mod
+    // fill with random data. using our own rand_mod
     for(int i=0; i < NoOfElements; i++) {
 	data[i] = rand() % MY_RANDOM_MOD;
     }
     
     pagefile = fopen(pfname, "w+b");
     if(!pagefile) {
-        perror("Error creating pagefile\n");
+        perror("Error creating pagefile!\n");
         exit(EXIT_FAILURE);
     }
     
     int writing_result = fwrite(data, sizeof(int), NoOfElements, pagefile);
     if(!writing_result) {
-        perror("Error creating pagefile\n");
+        perror("Error creating pagefile!\n");
         exit(EXIT_FAILURE);
     }
-    DEBUG(fprintf(stderr, "Pagefile created!\n"));
+    DEBUG(fprintf(stderr, "Pagefile created.\n"));
 }
 
 void open_logfile(){
     logfile = fopen(MMANAGE_LOGFNAME, "w");
     if(!logfile) {
-        perror("Error creating logfile\n");
+        perror("Error creating logfile!\n");
         exit(EXIT_FAILURE);
     }
-    DEBUG(fprintf(stderr, "Logfile created!\n"));
+    DEBUG(fprintf(stderr, "Logfile created.\n"));
 }
 
 
@@ -388,16 +389,16 @@ void vmem_init(){
 	exit(EXIT_FAILURE);
     }
     if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
-	perror("Shared Memory creation(truncate) failed!\n");
+	perror("Shared Memory truncate creation failed!\n");
 	exit(EXIT_FAILURE);
     }
 
     vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
     if(!vmem){
-	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!\n");
+	perror("Shared Memory could not be mapped into 'vmem'!\n");
 	exit(EXIT_FAILURE);
     }
-    DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
+    DEBUG(fprintf(stderr, "Shared Virtual Memory space created. Initializing....\n"));
     
     // fill vmem with intial NULL-Data
     vmem->adm.size = 0;										
@@ -407,30 +408,30 @@ void vmem_init(){
     vmem->adm.next_alloc_idx = 0;
     vmem->adm.pf_count = 0;
     
-    // Semaphor initialisieren
+    // initialize Semaphore
     int sem = sem_init(&vmem->adm.sema, 1, 1);
     if(sem != 0) {
 	perror("Semaphor initialization failed!\n");
 	exit(EXIT_FAILURE);
     }
     
-    // Page Table initialisieren
+    // initialize Page Table
     for(int i = 0; i < VMEM_NPAGES; i++) {
 	vmem->pt.entries[i].flags = 0;
 	vmem->pt.entries[i].frame = VOID_IDX;
     }
     
-    // Fragepage initialisieren
+    // initialise Framepage
     for(int i = 0; i < VMEM_NFRAMES; i++) {
 	vmem->pt.framepage[i] = VOID_IDX;
     }
       
-    // data initialisieren
+    // initialize data
     for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
 	vmem->data[i] = VOID_IDX;
     }
     
-    DEBUG(fprintf(stderr, "vmem sucessfully created and accessible!\n"));
+    DEBUG(fprintf(stderr, "Virtual Memory sucessfully created and accessible.\n"));
 }
 
 /* Do not change!  */

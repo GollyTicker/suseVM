@@ -84,7 +84,7 @@ void update_unload(int oldpage);
 
 void page_fault();
 
-void increment_alloc_idx(int alloc_idx);
+void increment_alloc_idx();
 
 void dump_vmem_structure();
 
