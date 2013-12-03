@@ -162,12 +162,10 @@ void case_page_fault() {
 }
 
 void dump_vmem_structure() {
-    // alle gespeicherten Daten ausgeben
     fprintf(stderr, " <========== DUMP OF VMEM =========> \n");
     fprintf(stderr, "Administrative Structures:\n");
     fprintf(stderr, "Filled: %d, Next_request: %d pf_count: %d Next_alloc_idx: %d\n",
 	    vmem->adm.size, vmem->adm.req_pageno, vmem->adm.pf_count, vmem->adm.next_alloc_idx);
-    
     fprintf(stderr, " <========== Data in vmem =========> \n");
     fprintf(stderr, "(index, data)\n");
     for(int i = 0; i < (VMEM_NFRAMES * VMEM_PAGESIZE); i++) {
@@ -176,12 +174,12 @@ void dump_vmem_structure() {
 }
 
 void cleanup(){
-    // shared memory löschen
+    // delete shared memory
     munmap(vmem, SHMSIZE);
     close(shared_memory_file_desc);
     shm_unlink(SHMKEY);
     
-    // dateien schliesen
+    // close files
     fclose(logfile);
     fclose(pagefile);
     
@@ -207,6 +205,7 @@ int find_remove_frame(){
     
     if(frame == VOID_IDX) {
 	DEBUG(fprintf(stderr, "<================= FAIL returned Frame is -1 ==============>\n"));
+	exit(EXIT_FAILURE);
     }
     return frame;
 }
@@ -225,21 +224,20 @@ int use_algorithm() {
 
 int find_remove_fifo() {
     int frame = vmem->adm.next_alloc_idx;
-    // naechsten index weiter rotieren
-    increment_alloc_idx();
+    rotate_alloc_idx();
     return frame;
 }
 
-void increment_alloc_idx() {
+// rotates the poiter to the ntext alloc in fifo clock and clock2
+void rotate_alloc_idx() {
     vmem->adm.next_alloc_idx++;
     vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
 }
 
 int find_remove_clock() {
-    int frame;
-    int done = 0;
+    int frame = VOID_IDX;
     
-    while(!done) {
+    while( frame == VOID_IDX ) {
 	int alloc_idx = vmem->adm.next_alloc_idx;
 	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
 	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
@@ -247,14 +245,13 @@ int find_remove_clock() {
 	
 	if(is_frame_flag_used) {
 	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
-	    increment_alloc_idx();
+	    rotate_alloc_idx();
 	}
 	else {
 	    frame = alloc_idx;
-	    done = 1;
 	}
     }
-    increment_alloc_idx();
+    rotate_alloc_idx();
     
     return frame;
 }
@@ -307,14 +304,14 @@ int find_remove_clock2() {
 	    // the counter is being rotated
 	    // because the current observed frame
 	    // wasn't taken
-	    increment_alloc_idx();
+	    rotate_alloc_idx();
 	}
 	else {
 	    frame = alloc_idx;
 	    done = 1;
 	}
     }
-    increment_alloc_idx();
+    rotate_alloc_idx();
     
     return frame;
 }
