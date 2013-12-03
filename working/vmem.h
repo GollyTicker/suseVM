@@ -68,7 +68,7 @@ typedef unsigned int Bmword;    /* Frame bitmap */
 #define PTF_USED        4       /* For clock algo only */
 
 // CLOCK ALGO 2 - das zweite USED BIT
-#define PTF_USED1       8       /* For clock2 algo only */
+#define PTF_USEDBIT2       8       /* For clock2 algo only */
 
 // ein eintrag in der Pagetable
 // gepeichert sind die flags(PRESENT, USEDBITS etc...)

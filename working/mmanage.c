@@ -228,7 +228,7 @@ int find_remove_fifo() {
     return frame;
 }
 
-// rotates the poiter to the ntext alloc in fifo clock and clock2
+// rotates the poiter to the next alloc in fifo clock and clock2
 void rotate_alloc_idx() {
     vmem->adm.next_alloc_idx++;
     vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
@@ -279,23 +279,24 @@ void fetch_page(int page) {
 }
 
 int find_remove_clock2() {
-    int frame;
-    int done = 0;
+    int frame = VOID_IDX;
     
-    while(!done) {
+    while( frame == VOID_IDX ) {
 	int alloc_idx = vmem->adm.next_alloc_idx;
 	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
 	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
 	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
 	
-	// falls das used bit gesetzt ist. dann veringerre es (oder das zweite used bit)
-	// sonst nehme diesen frame
+	// if the first USED bit is set, then either delete
+	// the second used bit or the first used bit.
+	// else use this frame
 	if(is_frame_flag_used) {
-	    int is_second_frame_flag_used = (flags & PTF_USED1) == PTF_USED1;
-	    // falls auch das zweite gesetzt ist,
-	    // dann loesche das zweite bit. sonst loesche das erste bit
+	    int is_second_frame_flag_used = (flags & PTF_USEDBIT2) == PTF_USEDBIT2;
+	    
+	    // if the second USED bit is also set,
+	    // then unset it. else simply unset the first USED bit
 	    if( is_second_frame_flag_used ) {
-		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED1;
+		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT2;
 	    }
 	    else {
 		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
@@ -308,7 +309,7 @@ int find_remove_clock2() {
 	}
 	else {
 	    frame = alloc_idx;
-	    done = 1;
+	    //done = 1;
 	}
     }
     rotate_alloc_idx();
