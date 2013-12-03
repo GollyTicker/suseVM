@@ -88,7 +88,8 @@ int
 
 void signal_proccessing_loop() {
     fprintf(stderr, "Memory Manager at pid(%d).\n", getpid());
-    fprintf(stderr, "Memory Manager is active...\n");
+    char *algo_str = ALGO_STR;
+    fprintf(stderr, "Memory Manager is using %s algorithm. Active...\n", algo_str);
     while(1) {
 	signal_number = 0;
 	pause();

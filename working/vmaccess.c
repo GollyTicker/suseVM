@@ -58,10 +58,6 @@ int vmem_read(int address) {
     // mark request for the case of a page fault
     vmem->adm.req_pageno = page;
     
-    // fixes weird bug
-    //sem_wait(&vmem->adm.sema);
-    
-    
     int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
     int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
@@ -73,10 +69,6 @@ int vmem_read(int address) {
     }
     
     result = read_page(page, offset);
-    
-    // fixes weird bug
-    //sem_post(&vmem->adm.sema);
-    
     
     return result;
 }
@@ -94,7 +86,7 @@ int calcIndexFromPageOffset(int page, int offset) {
 
 void countUsed(int page) {
     // if USED bit 1 is already set, then set the second used bit.
-    int used_1_is_set = vmem->pt.entries[page].flags & PTF_USEDBIT1;
+    int used_1_is_set = (vmem->pt.entries[page].flags & PTF_USEDBIT1) == PTF_USEDBIT1;
     if(used_1_is_set) {
 	vmem->pt.entries[page].flags |= PTF_USEDBIT2;
     }
@@ -112,8 +104,6 @@ void vmem_write(int address, int data) {
     // mark request for the case of a page fault
     vmem->adm.req_pageno = page;
     
-    //sem_wait(&vmem->adm.sema);
-    
     int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
     int req_page_is_loaded = ((flags & PTF_PRESENT) == PTF_PRESENT);
@@ -125,8 +115,6 @@ void vmem_write(int address, int data) {
     }
     
     write_page(page, offset, data);
-    
-    //sem_post(&vmem->adm.sema);
 }
 
 void write_page(int page, int offset, int data) {

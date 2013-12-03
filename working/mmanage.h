@@ -91,12 +91,19 @@ void dump_vmem_structure();
 #define MMANAGE_PFNAME "./pagefile.bin" /**< pagefile name */
 #define MMANAGE_LOGFNAME "./logfile.txt"        /**< logfile name */
 
-#define VMEM_ALGO_FIFO  0
-#define VMEM_ALGO_LRU   1
-#define VMEM_ALGO_CLOCK 2
-#define VMEM_ALGO_CLOCK2 3
-
 #define MY_RANDOM_MOD 123
+
+#ifdef FIFO
+#define ALGO_STR "FIFO"
+#endif
+
+#ifdef CLOCK
+#define ALGO_STR "CLOCK"
+#endif
+
+#ifdef CLOCK2
+#define ALGO_STR "CLOCK2"
+#endif
 
 #define SEED_PF 123456        /**< Get reproducable pseudo-random numbers for
                            init_pagefile */
