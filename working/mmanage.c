@@ -1,7 +1,6 @@
 /* Description: Memory Manager BSP3*/
 /* Prof. Dr. Wolfgang Fohl, HAW Hamburg */
-/* Winter 2010/2011
- * 
+ /* 
  * This is the memory manager process that
  * works together with the vmaccess process to
  * mimic virtual memory management.
@@ -62,7 +61,7 @@ int
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     if(sigaction(SIGUSR1, &sigact, NULL) != 0) {
-        perror("Error installing signal handler for USR1");
+        perror("Error installing signal handler for USR1\n");
         exit(EXIT_FAILURE);
     }
     else {
@@ -70,7 +69,7 @@ int
     }
 
     if(sigaction(SIGUSR2, &sigact, NULL) != 0) {
-        perror("Error installing signal handler for USR2");
+        perror("Error installing signal handler for USR2\n");
         exit(EXIT_FAILURE);
     }
     else {
@@ -78,7 +77,7 @@ int
     }
 
     if(sigaction(SIGINT, &sigact, NULL) != 0) {
-        perror("Error installing signal handler for INT");
+        perror("Error installing signal handler for INT\n");
         exit(EXIT_FAILURE);
     }
     else {
@@ -106,10 +105,6 @@ void signal_proccessing_loop() {
 	  noticed(msg);
 	  cleanup();
 	  break;
-	}
-	else {
-	  DEBUG(fprintf(stderr, "Unknown Signal: %d\n", signal_number));
-	  signal_number = 0;
 	}
     }
 }
@@ -364,13 +359,13 @@ void init_pagefile(const char *pfname) {
     
     pagefile = fopen(pfname, "w+b");
     if(!pagefile) {
-        perror("Error creating pagefile");
+        perror("Error creating pagefile\n");
         exit(EXIT_FAILURE);
     }
     
     int writing_result = fwrite(data, sizeof(int), NoOfElements, pagefile);
     if(!writing_result) {
-        perror("Error creating pagefile");
+        perror("Error creating pagefile\n");
         exit(EXIT_FAILURE);
     }
     DEBUG(fprintf(stderr, "Pagefile created!\n"));
@@ -379,7 +374,7 @@ void init_pagefile(const char *pfname) {
 void open_logfile(){
     logfile = fopen(MMANAGE_LOGFNAME, "w");
     if(!logfile) {
-        perror("Error creating logfile");
+        perror("Error creating logfile\n");
         exit(EXIT_FAILURE);
     }
     DEBUG(fprintf(stderr, "Logfile created!\n"));
@@ -389,17 +384,17 @@ void open_logfile(){
 void vmem_init(){
     shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if(!shared_memory_file_desc) {
-	perror("Shared Memory creation failed!");
+	perror("Shared Memory creation failed!\n");
 	exit(EXIT_FAILURE);
     }
     if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
-	perror("Shared Memory creation(truncate) failed!");
+	perror("Shared Memory creation(truncate) failed!\n");
 	exit(EXIT_FAILURE);
     }
 
     vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
     if(!vmem){
-	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!");
+	perror("Shared Memory konnte nicht in 'vmem' gemappt werden!\n");
 	exit(EXIT_FAILURE);
     }
     DEBUG(fprintf(stderr, "vmem sucessfully created. Initializing....\n"));
@@ -415,7 +410,7 @@ void vmem_init(){
     // Semaphor initialisieren
     int sem = sem_init(&vmem->adm.sema, 1, 1);
     if(sem != 0) {
-	perror("Semaphor initialization failed!");
+	perror("Semaphor initialization failed!\n");
 	exit(EXIT_FAILURE);
     }
     
