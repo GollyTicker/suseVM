@@ -98,7 +98,7 @@ void dump_vmem_structure();
 
 #define MY_RANDOM_MOD 123
 
-#define SEED_PF 290913        /**< Get reproducable pseudo-random numbers for
+#define SEED_PF 123456        /**< Get reproducable pseudo-random numbers for
                            init_pagefile */
 
 #define VOID_IDX -1

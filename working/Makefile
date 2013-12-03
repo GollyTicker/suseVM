@@ -5,8 +5,8 @@ LRT := -lrt
 SOURCE_FLAGS := -D_XOPEN_SOURCE=600 # some libreries requier open source
 
 #CCFLAGS += -DFIFO
-CCFLAGS += -DCLOCK
-#CCFLAGS += -DCLOCK2
+#CCFLAGS += -DCLOCK
+CCFLAGS += -DCLOCK2
 
 #CCFLAGS += -DDEBUG_MESSAGES
 

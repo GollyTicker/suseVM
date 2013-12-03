@@ -59,7 +59,7 @@ int vmem_read(int address) {
     vmem->adm.req_pageno = page;
     
     // fixes weird bug
-    sem_wait(&vmem->adm.sema);
+    //sem_wait(&vmem->adm.sema);
     
     
     int flags = vmem->pt.entries[page].flags;
@@ -75,7 +75,8 @@ int vmem_read(int address) {
     result = read_page(page, offset);
     
     // fixes weird bug
-    sem_post(&vmem->adm.sema);
+    //sem_post(&vmem->adm.sema);
+    
     
     return result;
 }
@@ -111,7 +112,7 @@ void vmem_write(int address, int data) {
     // mark request for the case of a page fault
     vmem->adm.req_pageno = page;
     
-    sem_wait(&vmem->adm.sema);
+    //sem_wait(&vmem->adm.sema);
     
     int flags = vmem->pt.entries[page].flags;
     // check whether the page is currently loaded
@@ -125,7 +126,7 @@ void vmem_write(int address, int data) {
     
     write_page(page, offset, data);
     
-    sem_post(&vmem->adm.sema);
+    //sem_post(&vmem->adm.sema);
 }
 
 void write_page(int page, int offset, int data) {

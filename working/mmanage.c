@@ -407,7 +407,7 @@ void vmem_init(){
     vmem->adm.pf_count = 0;
     
     // initialize Semaphore
-    int sem = sem_init(&vmem->adm.sema, 1, 1);
+    int sem = sem_init(&vmem->adm.sema, 1, 0);
     if(sem != 0) {
 	perror("Semaphor initialization failed!\n");
 	exit(EXIT_FAILURE);
