@@ -60,27 +60,27 @@ int
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     if(sigaction(SIGUSR1, &sigact, NULL) != 0) {
-        perror("Error installing signal handler for USR1\n");
+        perror("Error installing signal handler for USR1!\n");
         exit(EXIT_FAILURE);
     }
     else {
-        DEBUG(fprintf(stderr, "USR1 handler successfully installed\n"));
+        DEBUG(fprintf(stderr, "USR1 handler successfully installed.\n"));
     }
 
     if(sigaction(SIGUSR2, &sigact, NULL) != 0) {
-        perror("Error installing signal handler for USR2\n");
+        perror("Error installing signal handler for USR2!\n");
         exit(EXIT_FAILURE);
     }
     else {
-        DEBUG(fprintf(stderr, "USR2 handler successfully installed\n"));
+        DEBUG(fprintf(stderr, "USR2 handler successfully installed.\n"));
     }
 
     if(sigaction(SIGINT, &sigact, NULL) != 0) {
-        perror("Error installing signal handler for INT\n");
+        perror("Error installing signal handler for INT!\n");
         exit(EXIT_FAILURE);
     }
     else {
-        DEBUG(fprintf(stderr, "INT handler successfully installed\n"));
+        DEBUG(fprintf(stderr, "INT handler successfully installed.\n"));
     }
     
     signal_proccessing_loop();
@@ -89,13 +89,13 @@ int
 }
 
 void signal_proccessing_loop() {
-    fprintf(stderr, "Memory Manager: pid(%d)\n", getpid());
-    fprintf(stderr, "Memory Manager running...\n");
+    fprintf(stderr, "Memory Manager at pid(%d).\n", getpid());
+    fprintf(stderr, "Memory Manager is active...\n");
     while(1) {
 	signal_number = 0;
 	pause();
 	if(signal_number == SIGUSR2) {
-	  char *msg = "Signal recieved(SIGUSR2): dumping virtual memory\n";
+	  char *msg = "Signal recieved(SIGUSR2): dumping virtual memory.\n";
 	  noticed(msg);
 	  dump_vmem_structure();
 	}
@@ -113,8 +113,9 @@ void page_fault() {
     int new_frame = VOID_IDX;
     int req_page = vmem->adm.req_pageno;
     
-    // Page fault aufgetreten
-    DEBUG(fprintf(stderr, "Pagefault: Requested Page: %d\n", req_page));
+    DEBUG(fprintf(stderr, "\n<=== Pagefault ===>\n"));
+    // A Pagefault has occured
+    DEBUG(fprintf(stderr, "Requested Page: %d\n", req_page));
     
     vmem->adm.pf_count++;
     
@@ -141,7 +142,7 @@ void page_fault() {
     
     DEBUG(fprintf(stderr, "Page loaded. pf_count: %d\n", vmem->adm.pf_count));
     
-    // Den aufrufenden Freigeben
+    // free the calling process
     sem_post(&vmem->adm.sema);
 }
 
@@ -244,7 +245,7 @@ int find_remove_clock() {
 	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
 	int is_frame_flag_used = (flags & PTF_USED) == PTF_USED;
 	
-	if(is_frame_flag_used) {	// if frame is used. unset it and continue to next.
+	if(is_frame_flag_used) {
 	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USED;
 	    increment_alloc_idx();
 	}
@@ -264,14 +265,14 @@ void store_page(int page) {
     fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
     int written_ints = fwrite(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
     if(written_ints != VMEM_PAGESIZE) {
-	perror("Not everything could be written into the page.\n");
+	perror("Not everything could be written into the page!\n");
 	exit(EXIT_FAILURE);
     }
 }
 
 void fetch_page(int page) {
     int frame = vmem->pt.entries[page].frame;
-    // scrool to the position to write into
+    // scrool to the position to read from
     fseek(pagefile, sizeof(int)*VMEM_PAGESIZE*page, SEEK_SET);
     int readen_ints = fread(&vmem->data[VMEM_PAGESIZE*frame], sizeof(int), VMEM_PAGESIZE, pagefile);
     if(readen_ints != VMEM_PAGESIZE) {
@@ -333,7 +334,7 @@ void update_unload(int oldpage) {
     // delete all flags
     vmem->pt.entries[oldpage].flags = 0;
     
-    // dazugehoerigen frame reference entfernen
+    // delete the reference to the frame itwas occupiding
     vmem->pt.entries[oldpage].frame = VOID_IDX;
     
 }
