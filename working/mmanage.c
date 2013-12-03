@@ -18,7 +18,7 @@
 
 #include "mmanage.h"
 
-struct vmem_struct *vmem = NULL;	// Shared Memory with vmaccess.c
+struct vmem_struct *vmem = NULL;
 FILE *pagefile = NULL;
 FILE *logfile = NULL;
 int signal_number = 0;
@@ -34,7 +34,7 @@ int shared_memory_file_desc;
 #define DEBUG(A) (A)
 #endif
 
-// Usage: DEBUG(fprintf(stderr, "blubb bla bluff\n"));
+// Usage: DEBUG(fprintf(stderr, "hallo!! %d\n", die_nummer));
 
 
 int
@@ -226,7 +226,7 @@ int find_remove_fifo() {
     return frame;
 }
 
-// rotates the poiter to the next alloc in fifo clock and clock2
+// rotates the pointer to the next alloc in fifo clock and clock2
 void rotate_alloc_idx() {
     vmem->adm.next_alloc_idx++;
     vmem->adm.next_alloc_idx%=(VMEM_NFRAMES);
@@ -307,7 +307,6 @@ int find_remove_clock2() {
 	}
 	else {
 	    frame = alloc_idx;
-	    //done = 1;
 	}
     }
     rotate_alloc_idx();
@@ -347,9 +346,10 @@ int frames_are_occupied() {
 }
 
 void init_pagefile(const char *pfname) {
-    srand(SEED_PF);
     int NoOfElements = VMEM_NPAGES*VMEM_PAGESIZE;
     int data[NoOfElements];
+    
+    srand(SEED_PF);
     // fill with random data. using our own rand_mod
     for(int i=0; i < NoOfElements; i++) {
 	data[i] = rand() % MY_RANDOM_MOD;
@@ -399,7 +399,7 @@ void vmem_init(){
     DEBUG(fprintf(stderr, "Shared Virtual Memory space created. Initializing....\n"));
     
     // fill vmem with intial NULL-Data
-    vmem->adm.size = 0;										
+    vmem->adm.size = 0;
     vmem->adm.mmanage_pid = getpid();
     vmem->adm.shm_id = VOID_IDX;
     vmem->adm.req_pageno = VOID_IDX;
