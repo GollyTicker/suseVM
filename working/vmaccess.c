@@ -64,7 +64,7 @@ int vmem_read(int address) {
     
     if (!is_loaded) {
 	// DEBUG(fprintf(stderr, "Pagefult for reading!\n"));
-    // signal the memory manager and wait for it to load the page
+        // signal the memory manager and wait for it to load the page
 	kill(vmem->adm.mmanage_pid, SIGUSR1);
 	sem_wait(&vmem->adm.sema);
     }
@@ -111,7 +111,7 @@ void vmem_write(int address, int data) {
     
     if (!is_loaded) {
 	// DEBUG(fprintf(stderr, "Pagefult for writing!\n"));
-    // signal the memory manager and wait for it to load the page
+        // signal the memory manager and wait for it to load the page
 	kill(vmem->adm.mmanage_pid, SIGUSR1);
 	sem_wait(&vmem->adm.sema);
     }
