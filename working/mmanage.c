@@ -238,12 +238,12 @@ int find_remove_clock() {
     
     while( frame == VOID_IDX ) {
 	int alloc_idx = vmem->adm.next_alloc_idx;
-	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
-	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
+	int page_by_alloc_idx = vmem->pt.framepage[alloc_idx];
+	int flags = vmem->pt.entries[page_by_alloc_idx].flags;
 	int is_frame_flag_used = (flags & PTF_USEDBIT1) == PTF_USEDBIT1;
 	
 	if(is_frame_flag_used) {
-	    vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT1;
+	    vmem->pt.entries[page_by_alloc_idx].flags &= ~PTF_USEDBIT1;
 	    rotate_alloc_idx();
 	}
 	else {
@@ -285,8 +285,8 @@ int find_remove_clock2() {
     
     while( frame == VOID_IDX ) {
 	int alloc_idx = vmem->adm.next_alloc_idx;
-	int frame_by_alloc_idx = vmem->pt.framepage[alloc_idx];
-	int flags = vmem->pt.entries[frame_by_alloc_idx].flags;
+	int page_by_alloc_idx = vmem->pt.framepage[alloc_idx];
+	int flags = vmem->pt.entries[page_by_alloc_idx].flags;
 	int is_frame_flag_used = (flags & PTF_USEDBIT1) == PTF_USEDBIT1;
 	
 	// if the first USED bit is set, then either delete
@@ -298,10 +298,10 @@ int find_remove_clock2() {
 	    // if the second USED bit is also set,
 	    // then unset it. else simply unset the first USED bit
 	    if( is_second_frame_flag_used ) {
-		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT2;
+		vmem->pt.entries[page_by_alloc_idx].flags &= ~PTF_USEDBIT2;
 	    }
 	    else {
-		vmem->pt.entries[frame_by_alloc_idx].flags &= ~PTF_USEDBIT1;
+		vmem->pt.entries[page_by_alloc_idx].flags &= ~PTF_USEDBIT1;
 	    }
 	    
 	    // the counter is being rotated
@@ -333,7 +333,7 @@ void update_unload(int oldpage) {
     // delete all flags
     vmem->pt.entries[oldpage].flags = 0;
     
-    // delete the reference to the frame itwas occupiding
+    // delete the reference to the frame it was occuping
     vmem->pt.entries[oldpage].frame = VOID_IDX;
     
 }
@@ -386,17 +386,17 @@ void open_logfile(){
 void vmem_init(){
     // http://linux.die.net/man/3/shm_open
     shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-    if(!shared_memory_file_desc) {
+    if( shared_memory_file_desc != 0 ) {
 	perror("Shared Memory creation failed!\n");
 	exit(EXIT_FAILURE);
     }
-    if(ftruncate(shared_memory_file_desc, SHMSIZE) != 0) {
+    if( ftruncate(shared_memory_file_desc, SHMSIZE) != 0 ) {
 	perror("Shared Memory truncate creation failed!\n");
 	exit(EXIT_FAILURE);
     }
 
     vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
-    if(!vmem){
+    if( vmem != 0 ){
 	perror("Shared Memory could not be mapped into 'vmem'!\n");
 	exit(EXIT_FAILURE);
     }
@@ -412,8 +412,8 @@ void vmem_init(){
     
     // initialize Semaphore
     int sem = sem_init(&vmem->adm.sema, 1, 0);
-    if(sem != 0) {
-	perror("Semaphor initialization failed!\n");
+    if( sem != 0 ) {
+	perror("Semaphore initialization failed!\n");
 	exit(EXIT_FAILURE);
     }
     
