@@ -386,7 +386,7 @@ void open_logfile(){
 void vmem_init(){
     // http://linux.die.net/man/3/shm_open
     shared_memory_file_desc = shm_open(SHMKEY, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-    if( shared_memory_file_desc != 0 ) {
+    if(!shared_memory_file_desc) {
 	perror("Shared Memory creation failed!\n");
 	exit(EXIT_FAILURE);
     }
@@ -396,7 +396,7 @@ void vmem_init(){
     }
 
     vmem = mmap(NULL, SHMSIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shared_memory_file_desc, 0);
-    if( vmem != 0 ){
+    if( !vmem ){
 	perror("Shared Memory could not be mapped into 'vmem'!\n");
 	exit(EXIT_FAILURE);
     }
