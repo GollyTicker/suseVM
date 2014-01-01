@@ -1,0 +1,254 @@
+KAPITEL 2
+
+
+insmod
+
+Jedes Code-Stück, das zum Kernel hinzugefügt werden kann, wird ein Modul genannt.
+Der Linux-Kernel unterstützt eine Reihe verschiedener Modul-Typen (auch Klassen genannt),
+darunter auch Gerätetreiber. Jedes Modul besteht aus Objekt-Code, der nicht zu einem
+vollständigen ausführbaren Programm gelinkt ist und dynamisch mit dem Programm insmod
+zum laufenden Kernel hinzugelinkt sowie mit rmmod daraus wieder entfernt werden kann.
+
+
+
+init in translate.c
+
+Während eine Applikation eine einzige Aufgabe vom Anfang bis zum Ende durchführt,
+registriert sich ein Modul, um zukünftige Anfragen zu bedienen; seine main-Funktion
+beendet sich sofort wieder. Mit anderen Worten: Es ist die Aufgabe
+von init_module (dem Einsprungpunkt in das Modul), den späteren Aufruf der Funktionen
+des Moduls vorzubereiten. Das ist, als würde das Modul sagen: “Hier bin ich,
+und das kann ich.” Der zweite Einsprungpunkt eines Moduls, cleanup_module, wird unmittelbar,
+bevor das Modul entladen wird, aufgerufen. Die Funktion sollte dem Kernel folgendes mitteilen:
+“ich bin nicht mehr da, bitte mich nicht mehr, etwas zu tun.” Die Fähigkeit, ein Modul zu entladen,
+ist eines der Merkmale der Modularisierung, die Sie besonders schätzen lernen werden,
+da es die Entwicklungszeit deutlich herabsetzt. Dadurch können Sie neue Versionen Ihres
+Treibers testen, ohne den Rechner erst lange herunterfahren und neu starten zu müssen. 
+
+
+
+
+Symboltabelle des Kernals
+
+Wenn Ihr Modul geladen wird, werden alle deklarierten globalen Symbole in die Symboltabelle
+des Kernels aufgenommen. Das können Sie anhand der Datei /proc/ksyms oder der Ausgabe des Befehls ksyms überprüfen. 
+
+
+
+
+fehlerbehandlung init_modul
+
+Wenn beim Registrieren von Fähigkeiten ein Fehler auftritt, müssen Sie alle bis dahin
+durchgeführten Registrierungsaktivitäten rückgängig machen. Ein Fehler kann beispielsweise
+auftreten, wenn im System nicht mehr genug Speicher vorhanden ist, um Platz für eine neue
+Datenstruktur zu allozieren, oder weil eine angeforderte Ressource bereits von einem anderen
+Treiber verwendet wird. Obwohl das eher unwahrscheinlich ist, kann es passieren, und guter
+Programmcode muß in der Lage sein, damit umgehen zu können. 
+
+Linux verwaltet die registrierten Fähigkeiten nicht pro Modul, so daß ein Modul alles
+selbst rückgängig machen muß, wenn init_module an irgendeiner Stelle fehlschlägt.
+Wenn Sie jemals nicht alle registrierten Fähigkeiten deregistrieren, gerät der Kernel
+in einen instabilen Zustand: Sie können Ihre Fähigkeiten nicht noch einmal durch erneutes
+Laden des Moduls registrieren, weil sie als besetzt (busy) gemeldet werden, und Sie können
+sie auch nicht deregistrieren, weil Sie dazu den gleichen Zeiger bräuchten, den Sie auch
+zum Registrieren verwendet haben, und normalerweise nicht in der Lage sind, die Adresse
+herauszubekommen. Aus solchen Situationen wieder herauszukommen, ist knifflig; oft ist
+ein Neustart des Systems die einzige Lösung, damit Sie eine neuere Version Ihres Moduls laden können.
+
+
+
+
+Entladen
+
+Ein Modul wird mit dem Befehl rmmod entladen. Das Entladen ist deutlich einfacher als das Laden,
+weil nicht gelinkt werden muß. Der Befehl ruft den Systemaufruf delete_module auf, der wiederum
+cleanup_module im Modul aufruft, wenn der Verwendungszähler auf null gefallen ist,
+oder gibt ansonsten eine Fehlermeldung zurück.
+
+Die Implementation von cleanup_modules ist dafür zuständig, jedes Element zu deregistrieren,
+das das Modul vorher registriert hat. Nur die exportierten Symbole werden automatisch entfernt. 
+
+
+
+
+
+speicher reservieren
+
+Ihr Programm kann einen Speicherbereich mit kmalloc anfordern und mit kfree wieder freigeben.
+Diese Funktionen verhalten sich wie malloc und free mit der Ausnahme, daß kmalloc ein
+zusätzliches Argument, die Priorität, erwartet. Meistens verwendet man die Priorität
+GFP_KERNEL. Das Kürzel GFP steht dabei übrigens für “Get Free Page”. (Die Allokation
+von Speicher wird in Kapitel 7 beschrieben.) Es ist ein Vorteil von scull, daß der
+Treiber nicht von irgendwelcher Hardware abhängt, weil ja jeder Computer über Speicher verfügt.
+scull arbeitet einfach nur auf einem Stück Speicher, das mit kmalloc alloziert wird.
+
+
+
+KAPITEL 3
+ 
+
+
+Major Nummer
+
+Die Major-Nummer gibt an, welcher Treiber zu diesem Gerät gehört. Beispielsweise werden sowohl
+/dev/null als auch /dev/zero vom Treiber 1 verwaltet, während alle virtuellen Konsolen und
+seriellen Terminals vom Treiber 4 verwaltet werden; gleichermaßen ist der Treiber 7 für die
+Geräte vcs1 und vcsa1 zuständig. Der Kernel verwendet die Major-Nummer, um einem Gerät den
+passenden Treiber zuzuordnen. 
+
+Wenn devfs nicht verwendet wird, muß einem neuen Treiber eine Major-Nummer zugewiesen werden,
+um ihn zum System hinzuzufügen. Diese Zuweisung sollte während der Initialisierung des Treibers
+(bzw. des Moduls) vorgenommen werden, indem die folgende Funktion aufgerufen wird, die in <linux/fs.h> definiert ist: 
+
+int register_chrdev(unsigned int major, const char *name,
+                    struct file_operations *fops);
+
+
+
+
+minor nummer
+
+Auch Minor-Nummern bestehen aus acht Bits, sie werden aber nicht an register_chrdev übergeben,
+weil sie ja, wie bereits gesagt, nur vom Treiber verwendet werden. Es gibt einen gewaltigen
+Druck von seiten der Entwicklergemeinde, die Anzahl der im Kernel möglichen Geräte heraufzusetzen;
+die Unterstützung von Gerätenummern mit wenigstens 16 Bits ist eines der Ziele in der 2.5-Entwicklung. 
+
+
+mknod
+
+Der Befehl, um einen Knoten im Dateisystem zu erzeugen, lautet mknod und kann nur vom Superuser
+ausgeführt werden. Der Befehl erwartet neben dem Namen der zu erzeugende Knoten drei Argumente.
+Beispielsweise erzeugt der Befehl
+
+mknod /dev/scull0 c 254 0
+
+ein Zeichen-Gerät (c), dessen Major-Nummer 254 und dessen Minor-Nummer 0 ist. Minor-Nummern
+sollten im Bereich von 0 bis 255 liegen, weil sie aus historischen Gründen manchmal in nur
+einem Byte abgespeichert werden. Es gibt gute Gründe, den Bereich der verfügbaren Minor-Nummern
+zu erweitern, aber zur Zeit gilt noch die 8-Bit-Grenze. 
+Bitte beachten Sie, daß die spezielle Gerätedatei nach ihrer Erzeugung durch mknod wie
+alle anderen Informationen auf der Festplatte verbleibt, sofern sie nicht ausdrücklich
+wieder entfernt wird. Sie können das in diesem Beispiel erzeugte Gerät mit rm /dev/scull0
+wieder entfernen. 
+
+
+
+Semaphore
+
+Ein Semaphor ist ein allgemeiner Mechanismus zur Steuerung des Zugriffs auf Ressourcen.
+In seiner einfachsten Form kann ein Semaphor für gegenseitigen Ausschluß (mutual exclusion)
+verwendet werden; Prozesse, die Semaphore im Mutual Exclusion-Modus verwenden, werden daran
+gehindert, gleichzeitig den gleichen Code auszuführen oder auf die gleichen Daten zuzugreifen.
+Solche Semaphore nennt man oft mutex, was von “mutual exclusion” kommt.
+
+Semaphore in Linux werden in <asm/semaphore.h> definiert. Ihr Typ ist struct semaphore,
+und Treiber sollten auf sie nur über das definierte Interface zugreifen. In scull wird
+ein Semaphor pro Gerät in der Struktur Scull_Dev alloziert. Weil die Geräte vollständig
+unabhängig voneinander sind, ist es nicht notwendig, einen gegenseitigen Ausschluß über
+Gerätegrenzen hinweg zu erzwingen.
+
+Semaphore müssen vor der ersten Verwendung durch Übergabe eines numerischen Arguments
+an sema_init initialisiert werden. Wenn es um einen gegenseitigen Ausschluß geht (also darum,
+Threads vom gleichzeitigen Zugriff auf die gleichen Daten abzuhalten), dann kann das Semaphor
+mit dem Wert 1 initialisiert werden, was bedeutet, daß das Semaphor zur Verfügung steht.
+Der folgende Code aus der Initialisierungsfunktion des scull-Moduls (scull_init) zeigt,
+wie die Semaphore im Zuge der Einrichtung des Geräts initialisiert werden.
+
+
+
+
+
+Deadlock
+
+Bei der Arbeit mit Semaphoren muß man sich vorsehen. Die vom Semaphor geschützten Daten
+müssen genau definiert sein, und sämtlicher Code, der auf diese Daten zugreift, muß zuerst
+das Semaphor erwerben. Code, der down_interruptible verwendet, um das Semaphor zu erwerben,
+darf keine andere Funktion aufrufen, die ebenfalls versucht, diesen Semaphor zu erwerben;
+ansonsten kommt es zu einem Deadlock. Wenn es eine Routine in Ihrem Treiber versäumt, ein
+gehaltenes Semaphor wieder freizugeben (z.B. als Folge eines Rücksprungs nach einem Fehler),
+dann werden alle weiteren Versuche, das Semaphor zu erwerben, blockieren. Gegenseitiger Ausschluß
+ist immer ein kniffliges Problem und bedarf einer wohldefinierten und methodischen Herangehensweise. 
+
+In scull wird der gerätespezifische Semaphor dazu verwendet, die gespeicherten Daten vor
+unangemessenem Zugriff zu schützen. Sämtlicher Code, der auf das Feld data der Struktur
+Scull_Dev zugreift, muß zunächst das Semaphor erworben haben. Um Deadlocks zu vermeiden,
+sollten nur Funktionen, die Geräte-Methoden implementieren, das Semaphor anfordern.
+Interne Routinen wie das oben gezeigte scull_trim gehen davon aus, daß das Semaphor bereits
+erworben wurde. Solange dies gewährleistet ist, ist der Zugriff auf die Datenstruktur
+Scull_Dev vor Race Conditions geschützt. 
+
+
+
+
+
+
+
+
+KAPITEL 4
+
+
+Debugging
+
+KERN_NOTICE
+
+Situationen, die zwar normal, aber trotzdem beachtenswert sind.
+Eine Reihe von sicherheitsrelevanten Zuständen wird auf diesem Level gemeldet.
+
+
+KERN_ALERT
+
+Eine Situation, die ein unmittelbares Eingreifen erfordert.
+
+
+
+DEBUG CFLAGS IN DER MAKEFILE
+
+# Kommentieren Sie die folgende Zeile ein oder aus, um das Debugging
+# ein- oder auszuschalten
+DEBUG = y
+
+#  Debugging-Flag zu CFLAGS hinzufügen oder nicht
+ifeq ($(DEBUG),y)
+  DEBFLAGS = -O  -g -DSCULL_DEBUG # "-O" wird fuer die Expansion von
+                                 # Inline-Funktionen gebraucht
+else
+  DEBFLAGS = -O2
+endif
+
+CFLAGS += $(DEBFLAGS)
+
+
+Die Methode ioctl
+
+ioctl (näher im nächsten Kapitel besprochen) ist ein Systemaufruf,
+der auf einem Dateideskriptor arbeitet. Dazu wird eine “Befehls”-Nummer
+und (optional) ein weiteres Argument, üblicherweise ein Zeiger, übergeben.
+
+Als Alternative zur Verwendung des /proc-Dateisystems können Sie einige
+wenige ioctl-Befehle implementieren, die speziell auf das Debugging ausgerichtet sind.
+Diese Befehle können relevante Datenstrukturen vom Treiber in den User-Space kopieren,
+wo Sie sie näher untersuchen können.
+
+Die Verwendung von ioctl auf diese Art und Weise ist etwas schwieriger als
+die Verwendung von /proc, weil Sie ein zusätzliches Programm benötigen, das
+ioctl aufruft und die Ergebnisse ausgibt. Auch dieses Programm muß geschrieben,
+kompiliert und mit dem Modul, das Sie gerade testen, synchronisiert werden.
+Auf der anderen Seite ist es einfacher, den Treiber-Code zu schreiben,
+als eine /proc-Datei zu implementieren.
+
+Trotzdem gibt es Situationen, in denen ioctl die beste Möglichkeit ist,
+an Informationen heranzukommen, weil es schneller ist, als /proc auszulesen.
++Wenn Daten vor der Ausgabe bearbeitet werden müssen, kann es effizienter sein,
++die Daten in binärer Form anstatt als Textdatei zu bekommen. Außerdem erfordert
++ioctl auch nicht das Aufteilen der Daten in Fragmente, die auf eine Seite passen.
+
+Ein weiterer interessanter Vorteil des ioctl-Ansatzes besteht darin, daß Befehle
+zur Informationsabfrage auch dann im Treiber verbleiben können, wenn das Debugging
+ansonsten abgeschaltet ist. Im Gegensatz zu einer /proc-Datei, die für jeden sichtbar ist,
+der in das Verzeichnis schaut (und viel zu viele Leute werden sich vermutlich wundern,
+“was das für eine merkwürdige Datei ist”), bleiben undokumentierte ioctl-Befehle
+höchstwahrscheinlich unentdeckt. Außerdem sind sie immer noch da, wenn etwas
+Merkwürdiges mit dem Treiber passiert. Der einzige Nachteil ist ein geringfügig größeres Modul. 
+
+
+
