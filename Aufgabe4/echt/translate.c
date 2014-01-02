@@ -8,8 +8,8 @@ struct translate_dev *translate_devs; /*devices pointer*/
 
 
 /*parameter*/
-static char *translate_subst = TRANSLATE_DEF_SUBST;
-static int translate_bufsize = TRANSLATE_DEF_BUF_SIZE;
+static char *translate_subst = STD_TRANSLATE_SUBSTR;
+static int translate_bufsize = STD_BUFFER_SIZE;
 
 /*definition der modulparameter*/
 module_param(translate_subst, charp , S_IRUGO|S_IWUSR);
@@ -63,7 +63,7 @@ int getEncodedCharIndex(char c) {
 	if (IS_UPPER_CASE(c)) {
 		result = c - UPPER_OFFSET;
 	} else if (IS_LOWER_CASE(c)) {
-		result = c - LOWER_OFFSET;
+		result = c - LOWER_CASE_OFFSET;
 	}
 	return result;
 }
@@ -414,7 +414,7 @@ static int translate_init(void) {
 	#endif
 
     //Majonummer holen
-	result = alloc_chrdev_region(&dev, TRANSLATE_FIRST_MINOR, TRANSLATE_NUMBER_OF_DEVS,"translate\n");
+	result = alloc_chrdev_region(&dev, MINOR_BEGINNING, NO_OF_DEVICES,"translate\n");
 	translate_major = MAJOR(dev);
 
 	if (result < 0) {
@@ -427,17 +427,17 @@ static int translate_init(void) {
 	}
 
 	/*allocate memory for both structs an get the pointer*/
-	translate_devs = kmalloc(TRANSLATE_NUMBER_OF_DEVS * sizeof(struct translate_dev),GFP_KERNEL);
+	translate_devs = kmalloc(NO_OF_DEVICES * sizeof(struct translate_dev),GFP_KERNEL);
 	if (!translate_devs) {
 		result = -ENOMEM;
 	goto fail;
 	}
 
 	/*overwrite the device memory with 0*/
-	memset(translate_devs, 0, TRANSLATE_NUMBER_OF_DEVS * sizeof(struct translate_dev));
+	memset(translate_devs, 0, NO_OF_DEVICES * sizeof(struct translate_dev));
 
 	/*init the member of both devices (translate0,translate1)*/
-	for (i = 0; i < TRANSLATE_NUMBER_OF_DEVS; i++) {
+	for (i = 0; i < NO_OF_DEVICES; i++) {
 
 		/*init the semaphores*/
 		sema_init(&translate_devs[i].reader_open_lock, 1);
@@ -469,7 +469,7 @@ static int translate_init(void) {
 static void translate_setup_cdev(struct translate_dev *dev, int index) {
 	int result;
     /*set the devicenumber*/
-	int devno = MKDEV(translate_major, TRANSLATE_FIRST_MINOR + index);
+	int devno = MKDEV(translate_major, MINOR_BEGINNING + index);
 
 	#ifdef DEBUG_MESSAGES
 	printk(KERN_NOTICE "--- translate_setup_cdev called --- \n");
@@ -500,7 +500,7 @@ static void translate_cleanup(void) {
 	#endif
 
 	if (translate_devs != NULL) {
-		for (i = 0; i < TRANSLATE_NUMBER_OF_DEVS; i++) {
+		for (i = 0; i < NO_OF_DEVICES; i++) {
             //lese und schreiben pointer auf NULL setzten
 			translate_devs[i].read_pos = NULL;
 			translate_devs[i].write_pos = NULL;
@@ -524,8 +524,8 @@ static void translate_cleanup(void) {
 
 	}
     //deregistrieren des Moduls
-	dev = MKDEV(translate_major, TRANSLATE_FIRST_MINOR);
-	unregister_chrdev_region(dev, TRANSLATE_NUMBER_OF_DEVS);
+	dev = MKDEV(translate_major, MINOR_BEGINNING);
+	unregister_chrdev_region(dev, NO_OF_DEVICES);
 }
 
 
