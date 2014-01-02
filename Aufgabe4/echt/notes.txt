@@ -1,7 +1,20 @@
 
 
 
-das kompillieren mit "make" bei scull funktionierte nicht.
-doules/3.7.10...-default/build wurde nicht gefunden
-wir erstellten die beidne ordner /build und /include
+http://www.quora.com/openSUSE/What-are-Linux-kernel-headers-and-how-do-I-install-them
+
+es fehlte infrrastruktur in unserem openSuse linux.
+
+hierher haben wir es dann nachgeladen.
+
+$ sudo zypper install linux-kernel-headers
+$ sudo zypper in -t pattern devel_kernel
+
+aber zu wenig platz.....
+
+
+
+also habe die vm nochmal mit 20 GB statt nur 8 GB
+massenspeicher neu gemacht.
+
 
