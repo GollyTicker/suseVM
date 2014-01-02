@@ -1,3 +1,7 @@
+git fix: http://stackoverflow.com/questions/6448242/git-push-error-insufficient-permission-for-adding-an-object-to-repository-datab
+
+sudo chown -R swaneetsusevma4:users *
+
 
 dev-cycle:
 $ make
@@ -30,6 +34,20 @@ kann man des nun nicht mehr in das andere modul umleiten.)
 
 ===========================================================================
 
+ ======= Hinweis über den Kernelpfad im Makefile ======
+Das Kompillieren funktioniert nicht, da im suse
+anscheinend der /build in /modules/xx.xx.xx-x.xx nicht
+standardmaessig enthalten war.
+Mit Internetrecherche und einigen Installationen
+konnte dann das Mini-Modul in /try kompillieren und im Kernel laufen.
+Wir haben diesen "bugfix" dann auf unser translate angewendet.
+Es funktioniert nur, wenn man hier manuell
+angibt welchen Kernelordner Linux zu verwenden hat.
+Es ist unklar, wie man dies generisch formulieren koennte.
+
+
+==== sonstiges: =====
+
 http://www.quora.com/openSUSE/What-are-Linux-kernel-headers-and-how-do-I-install-them
 
 es fehlte infrrastruktur in unserem openSuse linux.
@@ -53,10 +71,5 @@ jedoch wenn man manuell diesen pfad verwendet,
 funktioniert das kompillieren.
 
 3.7.10-1.24-default
-
-
-
-
-
 
 
