@@ -1,5 +1,28 @@
 
+dev-cycle:
+$ make
+$ s
 
+===========================================================================
+
+Verwendungsweise: (mit sudo bash)
+$ echo "erster text" > /dev/translate0
+$ echo "zweiter text" > /dev/translate0
+$ cat /dev/translate0 > /dev/translate1
+^C
+$ cat /dev/translate1
+"erster text"
+"zweiter text"
+^C $ 
+
+Wenn man zwischendurch mit cat die gespeicherten Woerter
+ausgeben laesst, dann ist dieser inhalt nicht mehr im modul drinnen,
+und kann daher nicht ein zweites mal gelesen werden. (insbesondeere,
+kann man des nun nicht mehr in das andere modul umleiten.)
+
+
+
+===========================================================================
 
 http://www.quora.com/openSUSE/What-are-Linux-kernel-headers-and-how-do-I-install-them
 
@@ -24,3 +47,10 @@ jedoch wenn man manuell diesen pfad verwendet,
 funktioniert das kompillieren.
 
 3.7.10-1.24-default
+
+
+
+
+
+
+
