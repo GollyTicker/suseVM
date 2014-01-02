@@ -1,7 +1,7 @@
 #!/bin/sh
 module="translate"
 device="translate"
-mode="770" # frueher 664
+mode="664"
 
 # Nicht alle Distributionen enthalten staff; auf manchen muss "wheel" verwendet werden
 if grep -q '^staff:' /etc/group; then
