@@ -1,12 +1,11 @@
 
 dev-cycle:
-$ make
 $ sudo ./load_translate.sh
 // do stuff here
 $ sudo ./unload_translate.sh
-$ make clean
 
-
+Ein $ ./showTranslateMod.sh
+kann man überprüfen ob das Modul tatsächlich läuft.
 
 ===========================================================================
 
@@ -25,7 +24,6 @@ Wenn man zwischendurch mit cat die gespeicherten Woerter
 ausgeben laesst, dann ist dieser inhalt nicht mehr im modul drinnen,
 und kann daher nicht ein zweites mal gelesen werden. (insbesondeere,
 kann man des nun nicht mehr in das andere modul umleiten.)
-
 
 
 ===========================================================================
@@ -49,10 +47,11 @@ massenspeicher neu gemacht.
 nach der installatin funktioniert es leider niucht
 mit dem generischen $(uname -r).
 Dort ist nachwievor kein /build ordner vorhanden.
-jedoch wenn man manuell diesen pfad verwendet,
-funktioniert das kompillieren.
 
-3.7.10-1.24-default
+jedoch wenn man manuell diesen pfad verwendet,
+funktioniert das kompillieren:
+"3.7.10-1.24-default"
+Dieser Paf steht also nun im Makefile drinnen.
 
 
 
