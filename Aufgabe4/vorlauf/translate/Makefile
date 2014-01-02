@@ -19,7 +19,8 @@ obj-m	:= translate.o
 
 else
 
-KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+# KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+KERNELDIR ?= /lib/modules/3.7.10-1.24-default/build
 PWD       := $(shell pwd)
 
 modules:
