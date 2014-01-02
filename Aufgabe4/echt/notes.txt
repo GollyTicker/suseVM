@@ -1,0 +1,7 @@
+
+
+
+das kompillieren mit "make" bei scull funktionierte nicht.
+doules/3.7.10...-default/build wurde nicht gefunden
+wir erstellten die beidne ordner /build und /include
+
