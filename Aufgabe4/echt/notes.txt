@@ -17,4 +17,10 @@ aber zu wenig platz.....
 also habe die vm nochmal mit 20 GB statt nur 8 GB
 massenspeicher neu gemacht.
 
+nach der installatin funktioniert es leider niucht
+mit dem generischen $(uname -r).
+Dort ist nachwievor kein /build ordner vorhanden.
+jedoch wenn man manuell diesen pfad verwendet,
+funktioniert das kompillieren.
 
+3.7.10-1.24-default
