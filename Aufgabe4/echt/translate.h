@@ -1,19 +1,21 @@
 #ifndef TRANSLATE_H_
 #define TRANSLATE_H_
 
-// includes
-#include <linux/init.h>     	/*für module_init module_exit*/
-#include <linux/module.h>	/*muss in jedes modul*/
-#include <linux/kernel.h>   	/*kernelfunktionen*/
-#include <linux/slab.h>     	/*im kernel speicher allozieren*/
-#include <linux/fs.h>       	/*major beziehen , fileOps,file ...*/
+// aus dem scull-main
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/init.h>
+
+#include <linux/kernel.h>   	// printk()
+#include <linux/slab.h>     	// kmalloc()
+#include <linux/fs.h>       	// vieles...
 #include <linux/proc_fs.h>  	/*fürs Ablegen im Ordner /proc*/
-#include <linux/errno.h>    	/*errorcodes zurückgeben*/
-#include <linux/types.h>    	/* size_t */
-#include <linux/fcntl.h>	/*fileOPs f_mode*/
-#include <linux/cdev.h>    	/*für das struct cdev, was die minor praesentiert*/
-#include <linux/kdev_t.h>	/*für typ dev_t*/
-#include <asm/uaccess.h>	/*copy_from_user*/
+#include <linux/errno.h>    	// error codes
+#include <linux/types.h>    	// size_t
+#include <linux/fcntl.h>	    // file operations
+#include <linux/cdev.h>     	// cdev
+#include <linux/kdev_t.h>	    // dev_t
+#include <asm/uaccess.h>	    // copy_from_user()
 
 // defines
 #define TRANSLATE_DEF_BUF_SIZE 40       /*standard buffergröße 40*/
