@@ -2,10 +2,16 @@
 dev-cycle:
 $ make
 $ sudo ./load_translate.sh
+// do stuff here
+$ sudo ./unload_translate.sh
+$ make clean
+
+
 
 ===========================================================================
 
-Verwendungsweise: (mit sudo bash)
+Verwendungsweise:
+(in sudo bash)
 $ echo "erster text" > /dev/translate0
 $ echo "zweiter text" > /dev/translate0
 $ cat /dev/translate0 > /dev/translate1
