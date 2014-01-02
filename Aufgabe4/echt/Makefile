@@ -1,14 +1,11 @@
-DEBUG = y
-#Debugging Flag hinzufügen oder nicht
-ifeq ($(DEBUG),y)
-	DEBFLAGS = -O2 -g -DSCULL_DEBUG
-else
-	DEBFLAGS = -O2
-endif
 
-EXTRA_CFLAGS += $(DEBFLAGS)
-EXTRA_CFLAGS += -I$(LDDINC)
-EXTRA_CFLAGS += -DDEBUG_MESSAGES
+# Große Teile dieses Makefile
+# wurden auch aus dem vorgegebenen Beispiel uebernommen.
+
+EXTRA_CFLAGS = -I$(LDDINC)
+
+# comment this line out to disable debug messages
+EXTRA_CFLAGS += -O2 -DDEBUG_MESSAGES
 
 ifneq ($(KERNELRELEASE),)
 # call from kernel build system
@@ -19,6 +16,7 @@ obj-m	:= translate.o
 
 else
 
+# Hinweise zu dieser Ersetztung im Entwurf/Protokoll.
 # KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 KERNELDIR ?= /lib/modules/3.7.10-1.24-default/build
 PWD       := $(shell pwd)
@@ -27,7 +25,6 @@ modules:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) LDDINC=$(PWD)/../include modules
 
 endif
-
 
 
 clean:
