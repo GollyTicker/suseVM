@@ -363,51 +363,36 @@ return result;
 
 }
 
-//regestriert jede vom Modul bereitgestellte Fähigkeiten
+// called from kernel to initialize translate module. taken from scull
 static int translate_init(void) {
-    int result;
+    int result = EXIT_SUCCESS, i;
     dev_t dev;
-    int i;
-
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "--- translate_init called ---\n");
-    #endif
-
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_init: subst = %s \n",translate_subst);
-    #endif
-
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_init: bufsize = %d \n",translate_bufsize);
-    #endif
-
-    //Majonummer holen
+    
+    DEBUG(printk(KERN_NOTICE "translate_init()\n"));
+    DEBUG(printk(KERN_NOTICE "translate_init: param subst = %s \n",translate_subst));
+    DEBUG(printk(KERN_NOTICE "translate_init: param bufsize = %d \n",translate_bufsize));
+    
     result = alloc_chrdev_region(&dev, MINOR_BEGINNING, NO_OF_DEVICES,"translate\n");
     translate_major = MAJOR(dev);
 
-    if (result < 0) {
-
-        #ifdef DEBUG_MESSAGES
-        printk(KERN_ALERT "translate: can`t get major %d \n",translate_major);
-        #endif
-
-                return result;
+    if (result != EXIT_SUCCESS) {
+	DEBUG(printk(KERN_ALERT "translate_init: error(%d) getting major %d \n",
+		result, translate_major));
+	return result;
     }
 
-    /*allocate memory for both structs an get the pointer*/
+    // allocate memory for the devices
     translate_devs = kmalloc(NO_OF_DEVICES * sizeof(struct translate_dev),GFP_KERNEL);
     if (!translate_devs) {
         result = -ENOMEM;
-    goto fail;
+	goto fail;
     }
-
-    /*overwrite the device memory with 0*/
+    
+    // reset contents of device
     memset(translate_devs, 0, NO_OF_DEVICES * sizeof(struct translate_dev));
 
-    /*init the member of both devices (translate0,translate1)*/
+    // initialize each device (in translate its only two)
     for (i = 0; i < NO_OF_DEVICES; i++) {
-
-        /*init the semaphores*/
         sema_init(&translate_devs[i].reader_open_lock, 1);
         sema_init(&translate_devs[i].writer_open_lock, 1);
         sema_init(&translate_devs[i].itemsInBuffer, 0);
