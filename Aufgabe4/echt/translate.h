@@ -91,9 +91,9 @@ static void cleanup_single_translate_dev(int i);  // cleanup the device of the g
 
 // Echte Anwendungsfunktionen
 int encodeIndexFromChar(char c);
-void encode(char *write_pos);
+void encodeChar(char *write_pos);
 char decodeFromIndex(int index);
-void decode(char *read_pos);
+void decodeChar(char *read_pos);
 
 
 // file_operations interface implementieren

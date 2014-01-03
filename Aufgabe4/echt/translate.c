@@ -12,17 +12,16 @@ static int translate_bufsize = STD_BUFFER_SIZE;
 module_param(translate_subst, charp, S_IRUGO);
 module_param(translate_bufsize, int, S_IRUGO);
 
-// TODO: refactor debug prints
 // TODO: better naming of Anwendungsfunktionen
 
-void encode(char *write_pos) {
+void encodeChar(char *write_pos) {
     int index = encodeIndexFromChar(*write_pos);
     if (index != NEUTRAL_CHAR_INDEX) {
         *write_pos = translate_subst[index];
     }
 }
 
-void decode(char *read_pos) {
+void decodeChar(char *read_pos) {
     char * pchar = strchr(translate_subst, *read_pos);
     // if the char was found in substr (aka, had been encoded)
     if (pchar != NULL) {
@@ -137,9 +136,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
         // if we're the translate0 device
         // then encode during writing from user into device
         if (MINOR(dev->cdev.dev)== MINOR_BEGINNING) {
-	    DEBUG(printk(KERN_NOTICE "On translate0: encoding %s", dev->write_pos));
-            encode(dev->write_pos);
-	    DEBUG(printk(KERN_NOTICE "On translate0: encoded %s", dev->write_pos));
+            encodeChar(dev->write_pos);
         }
         
         // now that we've succesfully copied (encoded)
@@ -168,59 +165,42 @@ ssize_t translate_read(struct file *filp, char __user *buf,
 		       size_t count,loff_t *f_pos) {
     struct translate_dev *dev = filp->private_data;
     int numOfCopiedItems = 0;
-    ssize_t result = 0;
     int readerPos = (dev->read_pos - dev->buffer) / sizeof(char);
 
     DEBUG(printk(KERN_NOTICE "translate_read()\n"));
     
     while (numOfCopiedItems < count) {
         if (down_trylock(&dev->itemsInBuffer) != 0) {
-	    DEBUG(printk(KERN_NOTICE "translate_read: buffer empty, return number of copied chars: %d \n",numOfCopiedItems));
+	    DEBUG(printk(KERN_NOTICE "translate_read: buffer empty, read %d chars \n",numOfCopiedItems));
 	    return numOfCopiedItems;
 	}
+	
+	// because we're got the information now and the user want to read them
+	// we'll decode our buffer (if translate1) and THEN hand it over to the user.
         
-        /*if devices translate1 then decode*/
+        // if the device is translate1, then decode
         if (MINOR(dev->cdev.dev) == 1) {
-            decode(dev->read_pos);
+            decodeChar(dev->read_pos);
         }
         
-        /*copy from device to user space*/
         if (copy_to_user(buf, dev->read_pos, 1)) {
-            /*has read,cant reading, preocess will try again.*/
-            if (numOfCopiedItems > 0) {
-
-                #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_open: copy_to_user failed! already copied items: %d \n",numOfCopiedItems);
-                #endif
-
-                result = numOfCopiedItems;
-
-            }else {/*coulnt read,cant reading, throw fault */
-
-                #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_open: copy_to_user failed: sending -EFAULT \n");
-                #endif
-
-                result = -EFAULT;
-            }
-            /* increment the value of the semaphore itemsInBuffer*/
+            return -EFAULT;
             up(&dev->itemsInBuffer);
-            goto out;
         }
 
-        numOfCopiedItems++;
+        // update pointers
         dev->read_pos = dev->buffer + ((readerPos + 1) % translate_bufsize)* sizeof(char);
         readerPos = (dev->read_pos - dev->buffer) / sizeof(char);
-        dev->items--;
         buf += sizeof(char);
+	
+	// update counters
+        numOfCopiedItems++;
+        dev->items--;
 	
         up(&dev->freeBufferSpace);
     }
-
-    result = numOfCopiedItems;
-    out:
-    return result;
-
+    
+    return numOfCopiedItems;
 }
 
 // called from kernel to initialize translate module. taken from scull

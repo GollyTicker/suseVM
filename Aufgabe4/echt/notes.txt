@@ -1,7 +1,6 @@
 =======================================================================
 
-easier testing
-
+easier testing:
 
 sudo bash 1:
 $ cat /dev/translate0
