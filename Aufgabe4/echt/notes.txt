@@ -1,3 +1,18 @@
+=======================================================================
+
+easier testing
+
+
+sudo bash 1:
+$ cat /dev/translate0
+
+
+sudo bash 2:
+$ cat << EOF > /dev/translate0
+> dlkfg
+> skdlf
+> ksjdf
+> EOF
 
 ========================================================================
 For setting the module parameters,

@@ -58,33 +58,32 @@ int encodeIndexFromChar(char c) {
 
 // open operation (taken from scull)
 int translate_open(struct inode *inode, struct file *filp) {
-    int result = EXIT_SUCCESS; 
     struct translate_dev *dev = container_of(inode->i_cdev, struct translate_dev, cdev);
+    // makes a pointer to the device from a 'complicated' inode
     filp->private_data = dev;
     
     DEBUG(printk(KERN_NOTICE "translate_open()\n"));
     
-    if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
-        /*try to decrement the value of the semaphore and get write access*/
+    // we check whether the user is in write or read mode.
+    // then we try to access the corresponding part of the device
+    // if the device is free for writing/reading
+    if( (filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
+	// try to access the device. for that we try to decrease the
+	// semaphore value. If we succeed, we may use it.
+	// else we say, that the device is busy.
         if (down_trylock(&dev->writer_open_lock) != 0) {
-            
-            DEBUG(printk(KERN_NOTICE "translate_open: sending -EBUSY on write request \n"));
-            result = -EBUSY;
-        } else {
-            DEBUG(printk(KERN_NOTICE "translate_open: write access OK \n"));
+            DEBUG(printk(KERN_NOTICE "translate_open: device already being written onto.\n"));
+            return -EBUSY;
         }
     } else {
-        /*try to decrement the value of the semaphore and get read access*/
+	// same goes for reading
         if (down_trylock(&dev->reader_open_lock) != 0) {
-          
-            DEBUG(printk(KERN_NOTICE "translate_open: sending -EBUSY on read request \n"));
-            result = -EBUSY;
-        } else {
-            DEBUG(printk(KERN_NOTICE "translate_open: read access OK \n"));
+            DEBUG(printk(KERN_NOTICE "translate_open: device already being read from.\n"));
+            return -EBUSY;
         }
     }
-
-    return result;
+    
+    return EXIT_SUCCESS;
 }
 
 //fileoperation method for tag "release"
