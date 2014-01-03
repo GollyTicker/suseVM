@@ -31,6 +31,8 @@ module_init( translate_init);
 module_exit( translate_cleanup);
 
 
+// TODO: refactor debug prints
+
 void encode(char *write_pos) {
 	int index = getEncodedCharIndex(*write_pos);
 	if (index != NEUTRAL_CHAR_INDEX) {
@@ -59,9 +61,9 @@ int getEncodedCharIndex(char c) {
 	int result = NEUTRAL_CHAR_INDEX;
 
 	if (IS_UPPER_CASE(c)) {
-		result = c - UPPER_CASE_OFFSET;
+		result = c - UPPER_CASE_ASCII + UPPER_CASE_SUBSTR;
 	} else if (IS_LOWER_CASE(c)) {
-		result = c - LOWER_CASE_OFFSET;
+		result = c - LOWER_CASE_ASCII + LOWER_CASE_SUBSTR;
 	}
 	return result;
 }

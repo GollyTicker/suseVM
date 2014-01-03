@@ -14,6 +14,7 @@
 #include <linux/cdev.h>         // cdev
 #include <linux/kdev_t.h>	// dev_t
 #include <asm/uaccess.h>	// copy_from_user()
+#include <linux/string.h>       // strchr(),...
 
 // Translate DEFINE
 // standardmaessig ist der Buffer 40
@@ -21,6 +22,7 @@
 
 // der default translate substring
 #define STD_TRANSLATE_SUBSTR "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"    //standard subst
+#define TRANSLATE_SUBSTR_LEN (strlen(translate_subst))
 
 // die minor nummern beginnen ab 0
 #define MINOR_BEGINNING 0
@@ -29,12 +31,17 @@
 #define NO_OF_DEVICES 2
 
 // helper macros
-#define IS_LOWER_CASE(c) (c >= 'a' && c <= 'z')
-#define IS_UPPER_CASE(c) (c >= 'A' && c <= 'Z')
+#define IS_LOWER_CASE(c) ((c) >= 'a' && (c) <= 'z')
+#define IS_UPPER_CASE(c) ((c) >= 'A' && (c) <= 'Z')
 
 // offset for lower case characters
-#define LOWER_CASE_OFFSET 'a'
-#define UPPER_CASE_OFFSET 39    /*entspricht offsetwert 39*/
+#define LOWER_CASE_ASCII 'a'
+#define UPPER_CASE_ASCII 'A'
+
+// the encoding for lower case chars being at 0
+// the encoding for upper case chars begins at the middle
+#define LOWER_CASE_SUBSTR 0
+#define UPPER_CASE_SUBSTR (TRANSLATE_SUBSTR_LEN/2)
 
 // misc
 #define EXIT_SUCCESS 0
