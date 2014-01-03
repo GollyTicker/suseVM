@@ -393,26 +393,31 @@ static int translate_init(void) {
 
     // initialize each device (in translate its only two)
     for (i = 0; i < NO_OF_DEVICES; i++) {
-        sema_init(&translate_devs[i].reader_open_lock, 1);
-        sema_init(&translate_devs[i].writer_open_lock, 1);
-        sema_init(&translate_devs[i].itemsInBuffer, 0);
-        sema_init(&translate_devs[i].freeBufferSpace, translate_bufsize);
-
-        /*allocate memory for the buffer an set the pointer*/
-        translate_devs[i].buffer = kmalloc(translate_bufsize, GFP_KERNEL);
-        if (!translate_devs[i].buffer) {
-            result = -ENOMEM;
-            goto fail;
-        }
-
-        /*init the other member of the struct*/
-        translate_devs[i].items = 0;
-        translate_devs[i].read_pos = translate_devs[i].buffer;
-        translate_devs[i].write_pos = translate_devs[i].buffer;
-        translate_setup_cdev(&translate_devs[i], i);
+	struct translate_dev *dev = &translate_devs[i];
+	// allocate buffer (just like with the device memory)
+	dev->buffer = kmalloc(translate_bufsize, GFP_KERNEL);
+	if (!(dev->buffer)) {
+	    result = -ENOMEM;
+	    goto fail;
+	}
+	
+	dev->items = 0;
+	dev->read_pos = dev->buffer;
+	dev->write_pos = dev->buffer;
+	
+	// init semaphores
+	sema_init(&dev->reader_open_lock, 1);
+	sema_init(&dev->writer_open_lock, 1);
+	sema_init(&dev->itemsInBuffer, 0);
+	sema_init(&dev->freeBufferSpace, translate_bufsize);
+	
+	translate_setup_cdev(&translate_devs[i], i);
+	DEBUG(printk(KERN_NOTICE "translate_init: translate dev %d initialized", i));
     }
-
-    return 0;
+    
+    DEBUG(printk(KERN_NOTICE "translate_init: translate initialized"));
+    
+    return EXIT_SUCCESS;
 
     fail: translate_cleanup();
     return result;
