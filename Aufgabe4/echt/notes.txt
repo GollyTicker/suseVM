@@ -46,11 +46,10 @@ Verwendungsweise:
 $ echo "erster text" > /dev/translate0
 $ echo "zweiter text" > /dev/translate0
 $ cat /dev/translate0 > /dev/translate1
-^C
 $ cat /dev/translate1
 erster text
 zweiter text
-^C $ 
+$ 
 
 Wenn man zwischendurch mit cat die gespeicherten Woerter
 ausgeben laesst, dann ist dieser inhalt nicht mehr im modul drinnen,

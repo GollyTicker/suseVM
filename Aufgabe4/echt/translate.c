@@ -161,78 +161,28 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
     return numOfCopiedItems;
 }
 
-//fileoperation method for tag "read"
-ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t *f_pos) {
-        /*allocate an fill the struct to fileoperations*/
+// implementation of what happens when someone now wants to read
+// into our device. we got much help form others groups here.
+// this is very similar to the write process
+ssize_t translate_read(struct file *filp, char __user *buf,
+		       size_t count,loff_t *f_pos) {
     struct translate_dev *dev = filp->private_data;
     int numOfCopiedItems = 0;
     ssize_t result = 0;
-    int readPointerIndex = (dev->read_pos - dev->buffer) / sizeof(char);
+    int readerPos = (dev->read_pos - dev->buffer) / sizeof(char);
 
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "--- translate_read called ---\n");
-    #endif
-
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_read: readPointerIndex= %d \n",readPointerIndex);
-    #endif
-    
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_read: count= %d \n",count);
-    #endif
-    
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_read: param buffer= %s \n",buf);
-    #endif
+    DEBUG(printk(KERN_NOTICE "translate_read()\n"));
     
     while (numOfCopiedItems < count) {
-        if (numOfCopiedItems == 0) {
-                        /*decrement the value of the semaphore itemsInBuffer, is interruptable*/
-            if (down_interruptible(&dev->itemsInBuffer)) {
-
-                #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_read: down_interruptible failed. sending -ERESTARTSYS \n");
-                #endif
-
-                result = -ERESTARTSYS;
-                goto out;
-            }
-        } else {
-                        /*try to decrement the value of the semaphore itemsInBuffer*/
-            if (down_trylock(&dev->itemsInBuffer) != 0) {
-
-                #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_read: buffer empty, return number of copied chars: %d \n",numOfCopiedItems);
-                #endif
-
-                result = numOfCopiedItems;
-                goto out;
-            }
-        }
-        
-        
-        #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_read: user buffer befor encode= %s \n",buf);
-        #endif
-        
-        #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_read: device%d buffer befor encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
-        #endif
+        if (down_trylock(&dev->itemsInBuffer) != 0) {
+	    DEBUG(printk(KERN_NOTICE "translate_read: buffer empty, return number of copied chars: %d \n",numOfCopiedItems));
+	    return numOfCopiedItems;
+	}
         
         /*if devices translate1 then decode*/
         if (MINOR(dev->cdev.dev) == 1) {
             decode(dev->read_pos);
         }
-        
-        
-        #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_read: user buffer after encode= %s \n",buf);
-        #endif
-        
-        #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_read: device%d buffer after encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
-        #endif
-        
         
         /*copy from device to user space*/
         if (copy_to_user(buf, dev->read_pos, 1)) {
@@ -259,8 +209,8 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
         }
 
         numOfCopiedItems++;
-        dev->read_pos = dev->buffer + ((readPointerIndex + 1) % translate_bufsize)* sizeof(char);
-        readPointerIndex = (dev->read_pos - dev->buffer) / sizeof(char);
+        dev->read_pos = dev->buffer + ((readerPos + 1) % translate_bufsize)* sizeof(char);
+        readerPos = (dev->read_pos - dev->buffer) / sizeof(char);
         dev->items--;
         buf += sizeof(char);
 	
@@ -269,12 +219,7 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
 
     result = numOfCopiedItems;
     out:
-
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_read: \n\t return=%d \n\t free=%d \n\t used=%d \n\t items=%d \n", result,dev->freeBufferSpace.count, dev->itemsInBuffer.count, dev->items);
-    #endif
-
-return result;
+    return result;
 
 }
 
