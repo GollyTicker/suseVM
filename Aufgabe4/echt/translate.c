@@ -106,15 +106,17 @@ int translate_close(struct inode *inode, struct file *filp) {
 ssize_t translate_write(struct file *filp, const char __user *buf,
 			size_t count, loff_t *f_pos) {
     struct translate_dev *dev = filp->private_data;
-    int writePointerIndex = (dev->write_pos - dev->buffer) / sizeof(char);
+    
+    // position of the writer on the buffer
+    // it abstracts from the type char
+    int writerPos = (dev->write_pos - dev->buffer) / sizeof(char);
+    
     int numOfCopiedItems = 0;	// tracks the progress of the # of copied items
     
     DEBUG(printk(KERN_NOTICE "translate_write()\n"));
     
-    DEBUG(printk(KERN_NOTICE "translate_write: writePointerIndex= %d \n",writePointerIndex));
-    
     while (numOfCopiedItems < count) {
-        if (numOfCopiedItems == 0) {
+        if (numOfCopiedItems == 0) {	// TODO
             if (down_interruptible(&dev->freeBufferSpace)) {
                 return -ERESTARTSYS;
             }
@@ -146,11 +148,19 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
 	    DEBUG(printk(KERN_NOTICE "On translate0: encoded %s", dev->write_pos));
         }
         
-        numOfCopiedItems++;
-        dev->write_pos = dev->buffer + ((writePointerIndex + 1) % translate_bufsize)* sizeof(char);
-        writePointerIndex = (dev->write_pos - dev->buffer) / sizeof(char);
-        dev->items++;
+        // now that we've succesfully copied (encoded)
+        // a char, we increment all loop-dependent-variables.
+        
+        // update pointers
+        dev->write_pos = dev->buffer + ((writerPos + 1) % translate_bufsize)* sizeof(char);
+        writerPos = (dev->write_pos - dev->buffer) / sizeof(char);
         buf += sizeof(char);
+	
+	// update counters
+        numOfCopiedItems++;
+	dev->items++;
+	
+	// now that we've copied an item
         up(&dev->itemsInBuffer);
     }
 
