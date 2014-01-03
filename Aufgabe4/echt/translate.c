@@ -56,25 +56,19 @@ int encodeIndexFromChar(char c) {
     return result;
 }
 
-//fileoperation method for tag "open"
+// open operation (taken from scull)
 int translate_open(struct inode *inode, struct file *filp) {
     int result = EXIT_SUCCESS; 
-    /*The container_of macro takes the inode->i_cdev pointer to a field of type cdev,
-    within a structure of type translate_dev,
-    and returns a pointer to the translate_dev structure.*/
     struct translate_dev *dev = container_of(inode->i_cdev, struct translate_dev, cdev);
     filp->private_data = dev;
     
     DEBUG(printk(KERN_NOTICE "translate_open()\n"));
     
-    try_module_get(THIS_MODULE);/*increment that module's usage count*/
     if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
         /*try to decrement the value of the semaphore and get write access*/
         if (down_trylock(&dev->writer_open_lock) != 0) {
             
             DEBUG(printk(KERN_NOTICE "translate_open: sending -EBUSY on write request \n"));
-
-            module_put(THIS_MODULE);
             result = -EBUSY;
         } else {
             DEBUG(printk(KERN_NOTICE "translate_open: write access OK \n"));
@@ -84,8 +78,6 @@ int translate_open(struct inode *inode, struct file *filp) {
         if (down_trylock(&dev->reader_open_lock) != 0) {
           
             DEBUG(printk(KERN_NOTICE "translate_open: sending -EBUSY on read request \n"));
-            
-            module_put(THIS_MODULE);
             result = -EBUSY;
         } else {
             DEBUG(printk(KERN_NOTICE "translate_open: read access OK \n"));
@@ -120,8 +112,6 @@ int translate_release(struct inode *inode, struct file *filp) {
         //printk(KERN_NOTICE "translate_release: another reader may enter now \n");
         #endif
     }
-
-    module_put(THIS_MODULE);
 
     return result;
 }
