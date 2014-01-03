@@ -22,7 +22,6 @@ void encode(char *write_pos) {
     }
 }
 
-
 void decode(char *read_pos) {
     char * pchar = strchr(translate_subst, *read_pos);
     // if the char was found in substr (aka, had been encoded)
@@ -44,7 +43,6 @@ char decodeFromIndex(int index) {
 	return (UPPER_CASE_ASCII + (index - UPPER_CASE_SUBSTR_OFFSET));
     }
 }
-
 
 int encodeIndexFromChar(char c) {
     int result = NEUTRAL_CHAR_INDEX;
@@ -86,33 +84,21 @@ int translate_open(struct inode *inode, struct file *filp) {
     return EXIT_SUCCESS;
 }
 
-//fileoperation method for tag "release"
-int translate_release(struct inode *inode, struct file *filp) {
+// close file operation.
+// simply check which mode the user was in and decrease the corresponding
+// semaphore. this then allows others to read/write
+int translate_close(struct inode *inode, struct file *filp) {
     struct translate_dev *dev = filp->private_data;
-    int result = EXIT_SUCCESS;
-
     
-    //DEBUG(printk(KERN_NOTICE "translate_release called ---\n"));
+    DEBUG(printk(KERN_NOTICE "translate_close()\n"));
     
-
     if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
-        /*increase the value of the semaphore to unlock the monitor for writer*/
+        
         up(&dev->writer_open_lock);
-
-        
-      //  DEBUG(printk(KERN_NOTICE "translate_release: another writer may enter now \n"));
-        
-
     } else {
-        /*increase the value of the semaphore to unlock the monitor for reader*/
         up(&dev->reader_open_lock);
-
-        #ifdef DEBUG_MESSAGES
-        //printk(KERN_NOTICE "translate_release: another reader may enter now \n");
-        #endif
     }
-
-    return result;
+    return EXIT_SUCCESS;
 }
 
 // fileoperation method for tag "write"
@@ -402,8 +388,8 @@ static int translate_init(void) {
 	dev->write_pos = dev->buffer;
 	
 	// init semaphores
-	sema_init(&dev->reader_open_lock, 1);
-	sema_init(&dev->writer_open_lock, 1);
+	sema_init(&dev->reader_open_lock, NUM_SIMULT_ACCESS_USERS);
+	sema_init(&dev->writer_open_lock, NUM_SIMULT_ACCESS_USERS);
 	sema_init(&dev->itemsInBuffer, 0);
 	sema_init(&dev->freeBufferSpace, translate_bufsize);
 	

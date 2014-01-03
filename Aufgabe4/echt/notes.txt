@@ -26,6 +26,16 @@ $ sudo ./load_translate.sh
 // do stuff here
 $ sudo ./unload_translate.sh
 
+use alias rs="sudo bash ./retry.sh" for:
+// do stuff
+$ rs
+// test and do stuff
+$ rs
+// test and do stuff ...
+$ rs
+// etc
+
+
 Ein $ ./showTranslateMod.sh
 überprüft ob das Modul tatsächlich läuft.
 

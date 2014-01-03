@@ -34,6 +34,9 @@
 #define IS_LOWER_CASE(c) ((c) >= 'a' && (c) <= 'z')
 #define IS_UPPER_CASE(c) ((c) >= 'A' && (c) <= 'Z')
 
+// only one user may use a devices read/write 'port' at a time
+#define NUM_SIMULT_ACCESS_USERS 1
+
 // offset for lower case characters
 #define LOWER_CASE_ASCII 'a'
 #define UPPER_CASE_ASCII 'A'
@@ -75,7 +78,7 @@ struct translate_dev {
 
 // Translate fileoperations (auch aus scull ueberneommen)
 int translate_open(struct inode *inode, struct file *filp);
-int translate_release(struct inode *inode, struct file *filp);
+int translate_close(struct inode *inode, struct file *filp);
 ssize_t translate_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos);
 ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t *f_pos);
 
@@ -97,7 +100,7 @@ void decode(char *read_pos);
 struct file_operations translate_ops = {
     .owner = THIS_MODULE,
     .open  = translate_open,
-    .release = translate_release,
+    .release = translate_close,
     .write = translate_write,
     .read  = translate_read
 };
