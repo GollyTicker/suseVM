@@ -32,10 +32,8 @@ module_exit( translate_cleanup);
 
 
 void encode(char *write_pos) {
-	int index=0;
-
-	index = getEncodedCharIndex(*write_pos);
-	if (index >= 0 && index < strlen(translate_subst)) {
+	int index = getEncodedCharIndex(*write_pos);
+	if (index != NEUTRAL_CHAR_INDEX) {
 		*write_pos = translate_subst[index];
 	}
 }
@@ -58,10 +56,10 @@ void decode(char *read_pos) {
 
 
 int getEncodedCharIndex(char c) {
-	int result = -1;
+	int result = NEUTRAL_CHAR_INDEX;
 
 	if (IS_UPPER_CASE(c)) {
-		result = c - UPPER_OFFSET;
+		result = c - UPPER_CASE_OFFSET;
 	} else if (IS_LOWER_CASE(c)) {
 		result = c - LOWER_CASE_OFFSET;
 	}
@@ -70,7 +68,7 @@ int getEncodedCharIndex(char c) {
 
 //fileoperation method for tag "open"
 int translate_open(struct inode *inode, struct file *filp) {
-	int result = SUCCESS; 
+	int result = EXIT_SUCCESS; 
     /*The container_of macro takes the inode->i_cdev pointer to a field of type cdev,
     within a structure of type translate_dev,
     and returns a pointer to the translate_dev structure.*/
@@ -123,7 +121,7 @@ int translate_open(struct inode *inode, struct file *filp) {
 //fileoperation method for tag "release"
 int translate_release(struct inode *inode, struct file *filp) {
 	struct translate_dev *dev = filp->private_data;
-	int result = SUCCESS;
+	int result = EXIT_SUCCESS;
 
 	#ifdef DEBUG_MESSAGES
 	printk(KERN_NOTICE "--- translate_release called ---\n");

@@ -5,8 +5,6 @@
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
-
-// weiter notwenidige incudes
 #include <linux/kernel.h>       // printk()
 #include <linux/slab.h>         // kmalloc()
 #include <linux/fs.h>           // vieles...
@@ -35,9 +33,12 @@
 #define IS_UPPER_CASE(c) (c >= 'A' && c <= 'Z')
 
 // offset for lower case characters
-#define LOWER_CASE_OFFSET 97
-#define UPPER_OFFSET 39	/*entspricht offsetwert 39*/
-#define SUCCESS 0	/*result value 0 == success*/
+#define LOWER_CASE_OFFSET 'a'
+#define UPPER_CASE_OFFSET 39    /*entspricht offsetwert 39*/
+
+// misc
+#define EXIT_SUCCESS 0
+#define NEUTRAL_CHAR_INDEX -1
 
 // unser Device
 struct translate_dev {
