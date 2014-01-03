@@ -16,7 +16,7 @@ module_param(translate_bufsize, int, S_IRUGO);
 // TODO: better naming of Anwendungsfunktionen
 
 void encode(char *write_pos) {
-    int index = getEncodedCharIndex(*write_pos);
+    int index = encodeIndexFromChar(*write_pos);
     if (index != NEUTRAL_CHAR_INDEX) {
         *write_pos = translate_subst[index];
     }
@@ -32,28 +32,22 @@ void decode(char *read_pos) {
 	
 	// calc the index using both pointers
         int index = pchar - translate_subst;
-	
-	printk(KERN_NOTICE "Chiper(%c, %d)", *read_pos, index);
-	
-        if( IS_IN_LOWER_CASE_SUBSTR(index) ) {
-	    *read_pos = LOWER_CASE_ASCII + (index -LOWER_CASE_SUBSTR_OFFSET);
-	}
-	else {
-	    *read_pos = UPPER_CASE_ASCII + (index - UPPER_CASE_SUBSTR_OFFSET);
-	}
-	printk(KERN_NOTICE " -> %c", *read_pos);
-	/*if (('a' + index) > 'z') {
-            *read_pos = '\'' + index;
-        } else {
-            *read_pos = 'a' + index;
-        }*/
+	*read_pos = decodeFromIndex(index);
+    }
+}
+
+char decodeFromIndex(int index) {
+    if( IS_IN_LOWER_CASE_SUBSTR(index) ) {
+	return (LOWER_CASE_ASCII + (index -LOWER_CASE_SUBSTR_OFFSET));
+    }
+    else {
+	return (UPPER_CASE_ASCII + (index - UPPER_CASE_SUBSTR_OFFSET));
     }
 }
 
 
-int getEncodedCharIndex(char c) {
+int encodeIndexFromChar(char c) {
     int result = NEUTRAL_CHAR_INDEX;
-
     if (IS_UPPER_CASE(c)) {
         result = c - UPPER_CASE_ASCII + UPPER_CASE_SUBSTR_OFFSET;
     } else if (IS_LOWER_CASE(c)) {

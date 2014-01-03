@@ -87,8 +87,9 @@ static void translate_setup_cdev(struct translate_dev *dev, int index);
 static void cleanup_single_translate_dev(int i);  // cleanup the device of the given index
 
 // Echte Anwendungsfunktionen
-int getEncodedCharIndex(char c);
+int encodeIndexFromChar(char c);
 void encode(char *write_pos);
+char decodeFromIndex(int index);
 void decode(char *read_pos);
 
 
