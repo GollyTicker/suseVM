@@ -433,28 +433,20 @@ static int translate_init(void) {
     return result;
 }
 
-//setup method for character devices from skull driver
+// setup char device (taken form scull)
 static void translate_setup_cdev(struct translate_dev *dev, int index) {
-    int result;
-    /*set the devicenumber*/
-    int devno = MKDEV(translate_major, MINOR_BEGINNING + index);
-
-    #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "--- translate_setup_cdev called --- \n");
-    #endif
-    /*init the characterdevice*/
+    int result = EXIT_SUCCESS, devno = MKDEV(translate_major, MINOR_BEGINNING + index);
+    
+    DEBUG(printk(KERN_NOTICE "translate_setup_cdev()\n"));
+    
     cdev_init(&dev->cdev, &translate_ops);
     dev->cdev.owner = THIS_MODULE;
     dev->cdev.ops = &translate_ops;
-    /*add the characterdevice*/
+    
     result = cdev_add(&dev->cdev, devno, 1);
 
     if (result) {
-
-        #ifdef DEBUG_MESSAGES
-        printk (KERN_NOTICE "Error %d adding translatedev%d \n", result, index);
-        #endif
-
+        DEBUG(printk(KERN_NOTICE "Error(%d): adding translate dev %d \n", result, index));
     }
 }
 
@@ -484,5 +476,5 @@ static void cleanup_single_translate_dev(int i) {
     dev->buffer = NULL;
     // delete char dev
     cdev_del(&dev->cdev);
-    DEBUG(printk(KERN_NOTICE "translate_cleanup: kfree'd translate dev %i\n", i));
+    DEBUG(printk(KERN_NOTICE "translate_cleanup: kfree'd translate dev %d\n", i));
 }
