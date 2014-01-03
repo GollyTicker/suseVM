@@ -76,44 +76,31 @@ int translate_open(struct inode *inode, struct file *filp) {
     and returns a pointer to the translate_dev structure.*/
 	struct translate_dev *dev = container_of(inode->i_cdev, struct translate_dev, cdev);
 	filp->private_data = dev;
-
-	#ifdef DEBUG_MESSAGES
-	printk(KERN_NOTICE "--- translate_open called --- \n");
-	#endif
-
+	
+	DEBUG(printk(KERN_NOTICE "--- translate_open called --- \n"));
+	
 	try_module_get(THIS_MODULE);/*increment that module's usage count*/
 	if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
         /*try to decrement the value of the semaphore and get write access*/
 		if (down_trylock(&dev->writer_open_lock) != 0) {
-
-			#ifdef DEBUG_MESSAGES
-			printk(KERN_NOTICE "translate_open: sending -EBUSY on write request \n");
-			#endif
+			
+			DEBUG(printk(KERN_NOTICE "translate_open: sending -EBUSY on write request \n"));
 
 			module_put(THIS_MODULE);
 			result = -EBUSY;
 		} else {
-
-			#ifdef DEBUG_MESSAGES
-			printk(KERN_NOTICE "translate_open: write access OK \n");
-			#endif
+			DEBUG(printk(KERN_NOTICE "translate_open: write access OK \n"));
 		}
 	} else {
         /*try to decrement the value of the semaphore and get read access*/
 		if (down_trylock(&dev->reader_open_lock) != 0) {
-
-			#ifdef DEBUG_MESSAGES
-			printk(KERN_NOTICE "translate_open: sending -EBUSY on read request \n");
-			#endif
-
+		  
+			DEBUG(printk(KERN_NOTICE "translate_open: sending -EBUSY on read request \n"));
+			
 			module_put(THIS_MODULE);
 			result = -EBUSY;
 		} else {
-
-			#ifdef DEBUG_MESSAGES
-			printk(KERN_NOTICE "translate_open: read access OK \n");
-			#endif
-
+			DEBUG(printk(KERN_NOTICE "translate_open: read access OK \n"));
 		}
 	}
 

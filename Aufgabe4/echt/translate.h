@@ -14,7 +14,7 @@
 #include <linux/cdev.h>         // cdev
 #include <linux/kdev_t.h>	// dev_t
 #include <asm/uaccess.h>	// copy_from_user()
-#include <linux/string.h>       // strchr(),...
+#include <linux/string.h>       // strchr(), strlen()
 
 // Translate DEFINE
 // standardmaessig ist der Buffer 40
@@ -47,6 +47,17 @@
 #define EXIT_SUCCESS 0
 #define NEUTRAL_CHAR_INDEX -1
 
+// for debugging
+#ifdef DEBUG_MESSAGES
+#define DEBUG(A) (A)
+#endif
+
+// USAGE: TODO
+
+#ifndef DEBUG_MESSAGES
+#define DEBUG(A) 
+#endif
+
 // unser Device
 struct translate_dev {
 	char *buffer;
@@ -68,7 +79,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
 ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t *f_pos);
 
 
-// Install/Uninstall
+// Install/Uninstall (oriented on scull)
 static int translate_init(void);
 static void translate_cleanup(void);
 static void translate_setup_cdev(struct translate_dev *dev, int index);
