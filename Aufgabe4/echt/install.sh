@@ -27,6 +27,8 @@ buf=40
 
 # Hinzufuegen des Kernelmoduls
 /sbin/insmod ./$module.ko translate_subst=$subst translate_bufsize=$buf $* || exit 1
+# Aufruf ohne Parameter (ein oder auskommentieren)
+# /sbin/insmod ./$module.ko $* || exit 1
 
 # major nummer holen
 major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)

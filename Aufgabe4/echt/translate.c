@@ -1,35 +1,16 @@
 #include "translate.h"
 
-/**
- * globale variablen
- */
-int translate_major; /*erhaltene major nummer*/
-struct translate_dev *translate_devs; /*devices pointer*/
+// global variables 
+int translate_major;	// recieved major number
+struct translate_dev *translate_devs;	// translate device
 
-
-/*parameter*/
+// translate parameters (and default values)
 static char *translate_subst = STD_TRANSLATE_SUBSTR;
 static int translate_bufsize = STD_BUFFER_SIZE;
 
-/*definition der modulparameter*/
-module_param(translate_subst, charp , S_IRUGO|S_IWUSR);
-module_param(translate_bufsize, int, S_IRUGO|S_IWUSR);
-
-/*beschreibung der modulparameter*/
-MODULE_PARM_DESC(translate_bufsize, "buffersize, def 40 \n");
-MODULE_PARM_DESC(translate_subst, "subst, def 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' \n"); //Standard subst
-
-/* Metainformation, können mit modinfo aufgerufen werden*/
-MODULE_AUTHOR("Asmatullah Noor & Maschhood Ahmad");
-MODULE_DESCRIPTION("replace character");
-MODULE_SUPPORTED_DEVICE("none");
-MODULE_LICENSE("GPL");
-
-/*Dieses Makro sorgt dafür, dass im Fall eines Modultreibers der frei gewählte Funktionsname der Initialisierungsfunktion in den Namen init_module umgesetzt wird.*/
-module_init( translate_init);
-/*Dieses Makro sorgt dafür, dass im Fall eines Modultreibers der frei gewählte Funktionsname der Deinitialisierungsfunktion in den Namen cleanup_module umgesetzt wird.*/
-module_exit( translate_cleanup);
-
+// make variables into module params
+module_param(translate_subst, charp, S_IRUGO);
+module_param(translate_bufsize, int, S_IRUGO);
 
 // TODO: refactor debug prints
 

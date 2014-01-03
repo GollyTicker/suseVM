@@ -1,7 +1,10 @@
-git fix: http://stackoverflow.com/questions/6448242/git-push-error-insufficient-permission-for-adding-an-object-to-repository-datab
 
-sudo chown -R swaneetsusevma4:users *
+========================================================================
+For setting the module parameters,
+we used this site for help:
+http://www.tldp.org/LDP/lkmpg/2.6/html/x323.html
 
+======================================================================
 
 dev-cycle:
 $ sudo ./load_translate.sh
@@ -31,6 +34,13 @@ kann man des nun nicht mehr in das andere modul umleiten.)
 
 
 ===========================================================================
+
+git fix: http://stackoverflow.com/questions/6448242/git-push-error-insufficient-permission-for-adding-an-object-to-repository-datab
+
+sudo chown -R swaneetsusevma4:users *
+
+============================================================================
+
 
  ======= Hinweis Ueber den Kernelpfad im Makefile ======
 Das Kompillieren funktioniert nicht, da im suse

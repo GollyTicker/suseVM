@@ -99,5 +99,14 @@ struct file_operations translate_ops = {
     .read  = translate_read
 };
 
+// Module things
+// Metainformation
+MODULE_AUTHOR("Swaneet Sahoo and Ivan Morozov");
+MODULE_LICENSE("GPL");
+
+// module init and module exit procedures taken from scull
+module_init(translate_init);
+module_exit(translate_cleanup);
+
 
 #endif
