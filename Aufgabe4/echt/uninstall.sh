@@ -2,7 +2,7 @@
 module="translate"
 device="translate"
 
-# Remove translate modules
+# Remove translate modules (Abort on failure)
 /sbin/rmmod $module $* || exit 1
 
 # Remove corresponding nodes

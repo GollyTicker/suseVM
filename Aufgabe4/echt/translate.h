@@ -53,7 +53,7 @@ struct translate_dev {
 };
 
 
-// Translate fileoperations
+// Translate fileoperations (auch aus scull ueberneommen)
 int translate_open(struct inode *inode, struct file *filp);
 int translate_release(struct inode *inode, struct file *filp);
 ssize_t translate_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos);

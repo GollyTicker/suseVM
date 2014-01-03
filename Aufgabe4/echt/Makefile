@@ -2,7 +2,7 @@
 # Große Teile dieses Makefile
 # wurden auch aus dem vorgegebenen Beispiel uebernommen.
 
-EXTRA_CFLAGS = -I$(LDDINC)
+EXTRA_CFLAGS = -Wall -I$(LDDINC)
 
 # comment this line out to disable debug messages
 EXTRA_CFLAGS += -O2 -DDEBUG_MESSAGES

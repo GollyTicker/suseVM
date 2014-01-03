@@ -9,7 +9,7 @@ $ sudo ./load_translate.sh
 $ sudo ./unload_translate.sh
 
 Ein $ ./showTranslateMod.sh
-kann man überprüfen ob das Modul tatsächlich läuft.
+überprüft ob das Modul tatsächlich läuft.
 
 ===========================================================================
 
@@ -20,21 +20,21 @@ $ echo "zweiter text" > /dev/translate0
 $ cat /dev/translate0 > /dev/translate1
 ^C
 $ cat /dev/translate1
-"erster text"
-"zweiter text"
+erster text
+zweiter text
 ^C $ 
 
 Wenn man zwischendurch mit cat die gespeicherten Woerter
 ausgeben laesst, dann ist dieser inhalt nicht mehr im modul drinnen,
-und kann daher nicht ein zweites mal gelesen werden. (insbesondeere,
+und kann daher nicht ein zweites mal gelesen werden. (insbesondere
 kann man des nun nicht mehr in das andere modul umleiten.)
 
 
 ===========================================================================
 
- ======= Hinweis Ã¼ber den Kernelpfad im Makefile ======
+ ======= Hinweis Ueber den Kernelpfad im Makefile ======
 Das Kompillieren funktioniert nicht, da im suse
-anscheinend der /build in /modules/xx.xx.xx-x.xx nicht
+anscheinend der Ordner /build in /modules/xx.xx.xx-x.xx nicht
 standardmaessig enthalten war.
 Mit Internetrecherche und einigen Installationen
 konnte dann das Mini-Modul in /try kompillieren und im Kernel laufen.
@@ -69,6 +69,6 @@ Dort ist nachwievor kein /build ordner vorhanden.
 jedoch wenn man manuell diesen pfad verwendet,
 funktioniert das kompillieren:
 "3.7.10-1.24-default"
-Dieser Paf steht also nun im Makefile drinnen.
+Dieser Pfad steht also nun im Makefile drinnen.
 
 

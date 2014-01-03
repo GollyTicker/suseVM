@@ -3,8 +3,8 @@ module="translate"	# Name des Moduls
 device="translate"	# Prefix der beiden Devices
 mode="664"
 
-# compillieren des Moduls
-make
+# compillieren des Moduls (Abbruch, falls nicht erfolgreich)
+make || exit 1
 
 # Translate String
 # Neutral:
