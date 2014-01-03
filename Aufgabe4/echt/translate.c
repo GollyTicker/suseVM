@@ -102,44 +102,22 @@ int translate_close(struct inode *inode, struct file *filp) {
 }
 
 // fileoperation method for tag "write"
-ssize_t translate_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos) {
-    /*allocate an fill the struct to fileoperations*/
+ssize_t translate_write(struct file *filp, const char __user *buf,
+			size_t count, loff_t *f_pos) {
     struct translate_dev *dev = filp->private_data;
     int writePointerIndex = (dev->write_pos - dev->buffer) / sizeof(char);
-    
-    
-    
     ssize_t result = 0;
     int itemsCopied = 0;
-
-    #ifdef DEBUG_MESSAGES
-    //printk(KERN_NOTICE "--- translate_write called ---\n");
-    #endif
     
+    DEBUG(printk(KERN_NOTICE "translate_write()\n"));
     
-    #ifdef DEBUG_MESSAGES
-    //printk(KERN_NOTICE "translate_write: writePointerIndex= %d \n",writePointerIndex);
-    #endif
+    DEBUG(printk(KERN_NOTICE "translate_write: writePointerIndex= %d \n",writePointerIndex));
     
-    #ifdef DEBUG_MESSAGES
-    //printk(KERN_NOTICE "translate_write: count= %d \n",count);
-    #endif
-    
-    #ifdef DEBUG_MESSAGES
-    //printk(KERN_NOTICE "translate_write: param buffer= %s \n",buf);
-    #endif
-
     while (itemsCopied < count) {
         if (itemsCopied == 0) {
-            /*decrement the value of the semaphore freeBufferSpace, is interruptable*/
+	    
             if (down_interruptible(&dev->freeBufferSpace)) {
-
-                #ifdef DEBUG_MESSAGES
-                //printk(KERN_NOTICE "translate_write: down_interruptible failed. sending -ERESTARTSYS \n");
-                #endif
-
-                result = -ERESTARTSYS;/*wenn die Schleife durch ein Signal unterbrochen wird*/
-                goto out;
+                return -ERESTARTSYS;
             }
         } else {
             /*try to decrement the value of the semaphore freeBufferSpace*/
@@ -153,7 +131,9 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
                 goto out;
             }
         }
-        /*copy from device to user space*/
+        
+        
+        // now copy from the user
         if (copy_from_user(dev->write_pos, buf, 1)) {
             /*has wrote, cant writing now, process will try again*/
             if (itemsCopied > 0) {
@@ -176,28 +156,13 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
             goto out;
         }
         
-        
-        #ifdef DEBUG_MESSAGES
-        //printk(KERN_NOTICE "translate_write: user buffer befor encode= %s \n",buf);
-        #endif
-        
-        #ifdef DEBUG_MESSAGES
-        //printk(KERN_NOTICE "translate_write: device%d buffer befor encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
-        #endif
-        
-        /*if devices is translate0 then encode*/
-        if (MINOR(dev->cdev.dev)== 0) {
+        // if we're the translate0 device
+        // then encode during writing from user into device
+        if (MINOR(dev->cdev.dev)== MINOR_BEGINNING) {
+	    DEBUG(printk(KERN_NOTICE "On translate0: encoding %s", dev->write_pos));
             encode(dev->write_pos);
+	    DEBUG(printk(KERN_NOTICE "On translate0: encoded %s", dev->write_pos));
         }
-
-        
-        #ifdef DEBUG_MESSAGES
-        //printk(KERN_NOTICE "translate_write: user buffer after encode= %s \n",buf);
-        #endif
-        
-        #ifdef DEBUG_MESSAGES
-        //printk(KERN_NOTICE "translate_write: device%d buffer after encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
-        #endif
         
         itemsCopied++;
         dev->write_pos = dev->buffer + ((writePointerIndex + 1) % translate_bufsize)* sizeof(char);
@@ -206,10 +171,6 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
         buf += sizeof(char);
                 /* increment the value of the semaphore itemsInBuffer*/
         up(&dev->itemsInBuffer);
-
-        #ifdef DEBUG_MESSAGES
-        //printk(KERN_NOTICE "translate_write: \n\t free=%d \n\t used=%d \n\t items=%d \n\t copiedItems=%d \n",dev->freeBufferSpace.count, dev->itemsInBuffer.count,dev->items, itemsCopied);
-        #endif
 
     }
 
@@ -325,13 +286,8 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
         readPointerIndex = (dev->read_pos - dev->buffer) / sizeof(char);
         dev->items--;
         buf += sizeof(char);
-                /* increment the value of the semaphore freeBufferSpace*/
+	
         up(&dev->freeBufferSpace);
-
-        #ifdef DEBUG_MESSAGES
-        printk (KERN_NOTICE "translate_read: \n\t free=%d \n\t used=%d \n\t items=%d \n\t copiedItems=%d \n",dev->freeBufferSpace.count, dev->itemsInBuffer.count, dev->items, itemsCopied);
-        #endif
-
     }
 
     result = itemsCopied;

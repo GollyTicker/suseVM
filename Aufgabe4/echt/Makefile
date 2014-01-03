@@ -5,7 +5,7 @@
 EXTRA_CFLAGS = -Wall -I$(LDDINC)
 
 # comment this line out to disable debug messages
-EXTRA_CFLAGS += -O2 -DDEBUG_MESSAGES
+# EXTRA_CFLAGS += -O2 -DDEBUG_MESSAGES
 
 ifneq ($(KERNELRELEASE),)
 # call from kernel build system
