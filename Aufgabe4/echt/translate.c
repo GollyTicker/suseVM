@@ -116,19 +116,13 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
     DEBUG(printk(KERN_NOTICE "translate_write()\n"));
     
     while (numOfCopiedItems < count) {
-        if (numOfCopiedItems == 0) {	// TODO
-            if (down_interruptible(&dev->freeBufferSpace)) {
-                return -ERESTARTSYS;
-            }
-        } else {
-	    // decrease the semaphore
-	    // if the buffer is full, this fails.
-            if (down_trylock(&dev->freeBufferSpace) != 0) {
-                DEBUG(printk(KERN_NOTICE "translate_write: buffer is full. copied %d items \n",numOfCopiedItems));
-                return numOfCopiedItems;
-            }
-        }
-        
+	// decrease the semaphore
+	// if the buffer is full, this fails.
+	if (down_trylock(&dev->freeBufferSpace) != 0) {
+	    DEBUG(printk(KERN_NOTICE "translate_write: buffer is full. copied %d items \n",numOfCopiedItems));
+	    return numOfCopiedItems;
+	}
+	
         // at this point, the buffer isnt full and
         // there are still items to be copied.
         
