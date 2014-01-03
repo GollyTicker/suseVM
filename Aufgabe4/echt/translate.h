@@ -64,13 +64,13 @@
 
 // each of our devices have this
 struct translate_dev {
-	char *buffer;
-	int items;
-	char *read_pos;
-	char *write_pos;
-	struct cdev cdev;
-	struct semaphore writer_open_lock;
-	struct semaphore reader_open_lock;
+	char *buffer;	// pointer to the buffer
+	int items;	// # of items
+	char *read_pos;	// current reading position
+	char *write_pos;// current writing position
+	struct cdev cdev;// char device
+	struct semaphore writer_open_lock;	// mutex for writing
+	struct semaphore reader_open_lock;	// mutex for reading
 	struct semaphore itemsInBuffer;
 	struct semaphore freeBufferSpace;
 };

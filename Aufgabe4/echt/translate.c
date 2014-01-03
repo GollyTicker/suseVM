@@ -101,59 +101,41 @@ int translate_close(struct inode *inode, struct file *filp) {
     return EXIT_SUCCESS;
 }
 
-// fileoperation method for tag "write"
+// implementation of what happens when someone now wants to write
+// into our device. we got much help form others groups here.
 ssize_t translate_write(struct file *filp, const char __user *buf,
 			size_t count, loff_t *f_pos) {
     struct translate_dev *dev = filp->private_data;
     int writePointerIndex = (dev->write_pos - dev->buffer) / sizeof(char);
-    ssize_t result = 0;
-    int itemsCopied = 0;
+    int numOfCopiedItems = 0;	// tracks the progress of the # of copied items
     
     DEBUG(printk(KERN_NOTICE "translate_write()\n"));
     
     DEBUG(printk(KERN_NOTICE "translate_write: writePointerIndex= %d \n",writePointerIndex));
     
-    while (itemsCopied < count) {
-        if (itemsCopied == 0) {
-	    
+    while (numOfCopiedItems < count) {
+        if (numOfCopiedItems == 0) {
             if (down_interruptible(&dev->freeBufferSpace)) {
                 return -ERESTARTSYS;
             }
         } else {
-            /*try to decrement the value of the semaphore freeBufferSpace*/
+	    // decrease the semaphore
+	    // if the buffer is full, this fails.
             if (down_trylock(&dev->freeBufferSpace) != 0) {
-
-                #ifdef DEBUG_MESSAGES
-                //printk(KERN_NOTICE "translate_write: buffer full, return number of copied chars: %d \n",itemsCopied);
-                #endif
-
-                result = itemsCopied;
-                goto out;
+                DEBUG(printk(KERN_NOTICE "translate_write: buffer is full. copied %d items \n",numOfCopiedItems));
+                return numOfCopiedItems;
             }
         }
         
+        // at this point, the buffer isnt full and
+        // there are still items to be copied.
         
-        // now copy from the user
-        if (copy_from_user(dev->write_pos, buf, 1)) {
-            /*has wrote, cant writing now, process will try again*/
-            if (itemsCopied > 0) {
-
-                #ifdef DEBUG_MESSAGES
-                //printk(KERN_NOTICE "translate_write: copy_from_user failed! already copied items \n");
-                #endif
-
-                result = itemsCopied;
-            }else {/* coulnt wrote, cant writing, throw fault*/
-
-                #ifdef DEBUG_MESSAGES
-                //printk(KERN_NOTICE "translate_write: copy_from_user failed: sending -EFAULT (BAD ADDRESS) \n");
-                #endif
-
-                result = -EFAULT;/*BAD ADDRESS*/
-            }
-            /* increment the value of the semaphore of freeBufferSpace*/
-            up(&dev->freeBufferSpace);
-            goto out;
+        // now copy a single character from the user
+        if (copy_from_user(dev->write_pos, buf, 1)){
+                DEBUG(printk(KERN_NOTICE "translate_write: copy_from_user failed \n"));
+		// free semaphore again and end
+		up(&dev->freeBufferSpace);
+                return -EFAULT;
         }
         
         // if we're the translate0 device
@@ -164,31 +146,22 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
 	    DEBUG(printk(KERN_NOTICE "On translate0: encoded %s", dev->write_pos));
         }
         
-        itemsCopied++;
+        numOfCopiedItems++;
         dev->write_pos = dev->buffer + ((writePointerIndex + 1) % translate_bufsize)* sizeof(char);
         writePointerIndex = (dev->write_pos - dev->buffer) / sizeof(char);
         dev->items++;
         buf += sizeof(char);
-                /* increment the value of the semaphore itemsInBuffer*/
         up(&dev->itemsInBuffer);
-
     }
 
-    result = itemsCopied;
-    out:
-
-    #ifdef DEBUG_MESSAGES
-    //printk(KERN_NOTICE "translate_write: \n\t return=%d \n\t free=%d \n\t used=%d \n\t items=%d \n",result,dev->freeBufferSpace.count, dev->itemsInBuffer.count, dev->items);
-    #endif
-
-    return result;
+    return numOfCopiedItems;
 }
 
 //fileoperation method for tag "read"
 ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t *f_pos) {
         /*allocate an fill the struct to fileoperations*/
     struct translate_dev *dev = filp->private_data;
-    int itemsCopied = 0;
+    int numOfCopiedItems = 0;
     ssize_t result = 0;
     int readPointerIndex = (dev->read_pos - dev->buffer) / sizeof(char);
 
@@ -208,8 +181,8 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
     printk(KERN_NOTICE "translate_read: param buffer= %s \n",buf);
     #endif
     
-    while (itemsCopied < count) {
-        if (itemsCopied == 0) {
+    while (numOfCopiedItems < count) {
+        if (numOfCopiedItems == 0) {
                         /*decrement the value of the semaphore itemsInBuffer, is interruptable*/
             if (down_interruptible(&dev->itemsInBuffer)) {
 
@@ -225,10 +198,10 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
             if (down_trylock(&dev->itemsInBuffer) != 0) {
 
                 #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_read: buffer empty, return number of copied chars: %d \n",itemsCopied);
+                printk(KERN_NOTICE "translate_read: buffer empty, return number of copied chars: %d \n",numOfCopiedItems);
                 #endif
 
-                result = itemsCopied;
+                result = numOfCopiedItems;
                 goto out;
             }
         }
@@ -260,13 +233,13 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
         /*copy from device to user space*/
         if (copy_to_user(buf, dev->read_pos, 1)) {
             /*has read,cant reading, preocess will try again.*/
-            if (itemsCopied > 0) {
+            if (numOfCopiedItems > 0) {
 
                 #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_open: copy_to_user failed! already copied items: %d \n",itemsCopied);
+                printk(KERN_NOTICE "translate_open: copy_to_user failed! already copied items: %d \n",numOfCopiedItems);
                 #endif
 
-                result = itemsCopied;
+                result = numOfCopiedItems;
 
             }else {/*coulnt read,cant reading, throw fault */
 
@@ -281,7 +254,7 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
             goto out;
         }
 
-        itemsCopied++;
+        numOfCopiedItems++;
         dev->read_pos = dev->buffer + ((readPointerIndex + 1) % translate_bufsize)* sizeof(char);
         readPointerIndex = (dev->read_pos - dev->buffer) / sizeof(char);
         dev->items--;
@@ -290,7 +263,7 @@ ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t 
         up(&dev->freeBufferSpace);
     }
 
-    result = itemsCopied;
+    result = numOfCopiedItems;
     out:
 
     #ifdef DEBUG_MESSAGES
