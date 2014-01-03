@@ -6,7 +6,7 @@ device="translate"
 /sbin/rmmod $module $* || exit 1
 
 # Remove corresponding nodes
-rm -f /dev/${device} /dev/${device}[0-1] 
+rm -f /dev/${device}[0-1] 
 
 # Remove compilations files
 make clean
