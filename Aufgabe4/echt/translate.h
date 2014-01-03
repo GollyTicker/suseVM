@@ -40,8 +40,9 @@
 
 // the encoding for lower case chars being at 0
 // the encoding for upper case chars begins at the middle
-#define LOWER_CASE_SUBSTR 0
-#define UPPER_CASE_SUBSTR (TRANSLATE_SUBSTR_LEN/2)
+#define LOWER_CASE_SUBSTR_OFFSET 0
+#define UPPER_CASE_SUBSTR_OFFSET (TRANSLATE_SUBSTR_LEN/2)
+#define IS_IN_LOWER_CASE_SUBSTR(A) ((A) >= LOWER_CASE_SUBSTR_OFFSET && (A) < UPPER_CASE_SUBSTR_OFFSET)
 
 // misc
 #define EXIT_SUCCESS 0

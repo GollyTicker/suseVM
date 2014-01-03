@@ -13,6 +13,7 @@ module_param(translate_subst, charp, S_IRUGO);
 module_param(translate_bufsize, int, S_IRUGO);
 
 // TODO: refactor debug prints
+// TODO: better naming of Anwendungsfunktionen
 
 void encode(char *write_pos) {
     int index = getEncodedCharIndex(*write_pos);
@@ -23,17 +24,29 @@ void encode(char *write_pos) {
 
 
 void decode(char *read_pos) {
-    char * pch = NULL;
-    int index=0;
-
-    pch = strchr(translate_subst, *read_pos);
-    if (pch != NULL) {
-        index = pch - translate_subst;
-        if (('a' + index) > 'z') {
+    char * pchar = strchr(translate_subst, *read_pos);
+    // if the char was found in substr (aka, had been encoded)
+    if (pchar != NULL) {
+	// then get the original char according to
+	// the position of the finding
+	
+	// calc the index using both pointers
+        int index = pchar - translate_subst;
+	
+	printk(KERN_NOTICE "Chiper(%c, %d)", *read_pos, index);
+	
+        if( IS_IN_LOWER_CASE_SUBSTR(index) ) {
+	    *read_pos = LOWER_CASE_ASCII + (index -LOWER_CASE_SUBSTR_OFFSET);
+	}
+	else {
+	    *read_pos = UPPER_CASE_ASCII + (index - UPPER_CASE_SUBSTR_OFFSET);
+	}
+	printk(KERN_NOTICE " -> %c", *read_pos);
+	/*if (('a' + index) > 'z') {
             *read_pos = '\'' + index;
         } else {
             *read_pos = 'a' + index;
-        }
+        }*/
     }
 }
 
@@ -42,9 +55,9 @@ int getEncodedCharIndex(char c) {
     int result = NEUTRAL_CHAR_INDEX;
 
     if (IS_UPPER_CASE(c)) {
-        result = c - UPPER_CASE_ASCII + UPPER_CASE_SUBSTR;
+        result = c - UPPER_CASE_ASCII + UPPER_CASE_SUBSTR_OFFSET;
     } else if (IS_LOWER_CASE(c)) {
-        result = c - LOWER_CASE_ASCII + LOWER_CASE_SUBSTR;
+        result = c - LOWER_CASE_ASCII + LOWER_CASE_SUBSTR_OFFSET;
     }
     return result;
 }
@@ -94,7 +107,7 @@ int translate_release(struct inode *inode, struct file *filp) {
     int result = EXIT_SUCCESS;
 
     
-    DEBUG(printk(KERN_NOTICE "translate_release called ---\n"));
+    //DEBUG(printk(KERN_NOTICE "translate_release called ---\n"));
     
 
     if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
@@ -102,7 +115,7 @@ int translate_release(struct inode *inode, struct file *filp) {
         up(&dev->writer_open_lock);
 
         
-        DEBUG(printk(KERN_NOTICE "translate_release: another writer may enter now \n"));
+      //  DEBUG(printk(KERN_NOTICE "translate_release: another writer may enter now \n"));
         
 
     } else {
@@ -110,7 +123,7 @@ int translate_release(struct inode *inode, struct file *filp) {
         up(&dev->reader_open_lock);
 
         #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_release: another reader may enter now \n");
+        //printk(KERN_NOTICE "translate_release: another reader may enter now \n");
         #endif
     }
 
@@ -131,20 +144,20 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
     int itemsCopied = 0;
 
     #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "--- translate_write called ---\n");
+    //printk(KERN_NOTICE "--- translate_write called ---\n");
     #endif
     
     
     #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_write: writePointerIndex= %d \n",writePointerIndex);
+    //printk(KERN_NOTICE "translate_write: writePointerIndex= %d \n",writePointerIndex);
     #endif
     
     #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_write: count= %d \n",count);
+    //printk(KERN_NOTICE "translate_write: count= %d \n",count);
     #endif
     
     #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_write: param buffer= %s \n",buf);
+    //printk(KERN_NOTICE "translate_write: param buffer= %s \n",buf);
     #endif
 
     while (itemsCopied < count) {
@@ -153,7 +166,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
             if (down_interruptible(&dev->freeBufferSpace)) {
 
                 #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_write: down_interruptible failed. sending -ERESTARTSYS \n");
+                //printk(KERN_NOTICE "translate_write: down_interruptible failed. sending -ERESTARTSYS \n");
                 #endif
 
                 result = -ERESTARTSYS;/*wenn die Schleife durch ein Signal unterbrochen wird*/
@@ -164,7 +177,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
             if (down_trylock(&dev->freeBufferSpace) != 0) {
 
                 #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_write: buffer full, return number of copied chars: %d \n",itemsCopied);
+                //printk(KERN_NOTICE "translate_write: buffer full, return number of copied chars: %d \n",itemsCopied);
                 #endif
 
                 result = itemsCopied;
@@ -177,14 +190,14 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
             if (itemsCopied > 0) {
 
                 #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_write: copy_from_user failed! already copied items \n");
+                //printk(KERN_NOTICE "translate_write: copy_from_user failed! already copied items \n");
                 #endif
 
                 result = itemsCopied;
             }else {/* coulnt wrote, cant writing, throw fault*/
 
                 #ifdef DEBUG_MESSAGES
-                printk(KERN_NOTICE "translate_write: copy_from_user failed: sending -EFAULT (BAD ADDRESS) \n");
+                //printk(KERN_NOTICE "translate_write: copy_from_user failed: sending -EFAULT (BAD ADDRESS) \n");
                 #endif
 
                 result = -EFAULT;/*BAD ADDRESS*/
@@ -196,11 +209,11 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
         
         
         #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_write: user buffer befor encode= %s \n",buf);
+        //printk(KERN_NOTICE "translate_write: user buffer befor encode= %s \n",buf);
         #endif
         
         #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_write: device%d buffer befor encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
+        //printk(KERN_NOTICE "translate_write: device%d buffer befor encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
         #endif
         
         /*if devices is translate0 then encode*/
@@ -210,11 +223,11 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
 
         
         #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_write: user buffer after encode= %s \n",buf);
+        //printk(KERN_NOTICE "translate_write: user buffer after encode= %s \n",buf);
         #endif
         
         #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_write: device%d buffer after encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
+        //printk(KERN_NOTICE "translate_write: device%d buffer after encode= %s \n",MINOR(dev->cdev.dev),dev->buffer);
         #endif
         
         itemsCopied++;
@@ -226,7 +239,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
         up(&dev->itemsInBuffer);
 
         #ifdef DEBUG_MESSAGES
-        printk(KERN_NOTICE "translate_write: \n\t free=%d \n\t used=%d \n\t items=%d \n\t copiedItems=%d \n",dev->freeBufferSpace.count, dev->itemsInBuffer.count,dev->items, itemsCopied);
+        //printk(KERN_NOTICE "translate_write: \n\t free=%d \n\t used=%d \n\t items=%d \n\t copiedItems=%d \n",dev->freeBufferSpace.count, dev->itemsInBuffer.count,dev->items, itemsCopied);
         #endif
 
     }
@@ -235,7 +248,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf, size_t count,
     out:
 
     #ifdef DEBUG_MESSAGES
-    printk(KERN_NOTICE "translate_write: \n\t return=%d \n\t free=%d \n\t used=%d \n\t items=%d \n",result,dev->freeBufferSpace.count, dev->itemsInBuffer.count, dev->items);
+    //printk(KERN_NOTICE "translate_write: \n\t return=%d \n\t free=%d \n\t used=%d \n\t items=%d \n",result,dev->freeBufferSpace.count, dev->itemsInBuffer.count, dev->items);
     #endif
 
     return result;
