@@ -115,7 +115,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
     while (numOfCopiedItems < count) {
 	// decrease the semaphore
 	// if the buffer is full, this fails.
-	if (down_trylock(&dev->freeBufferSpace) != 0) {
+	if (dev->items == translate_bufsize) { //down_trylock(&dev->freeBufferSpace) != 0
 	    DEBUG(printk(KERN_NOTICE "translate_write: buffer is full. copied %d items \n",numOfCopiedItems));
 	    return numOfCopiedItems;
 	}
@@ -127,7 +127,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
         if (copy_from_user(dev->write_pos, buf, 1)){
                 DEBUG(printk(KERN_NOTICE "translate_write: copy_from_user failed \n"));
 		// free semaphore again and end
-		up(&dev->freeBufferSpace);
+		//up(&dev->freeBufferSpace);
                 return -EFAULT;
         }
         
@@ -150,7 +150,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
 	dev->items++;
 	
 	// now that we've copied an item
-        up(&dev->itemsInBuffer);
+        //up(&dev->itemsInBuffer);
     }
 
     return numOfCopiedItems;
@@ -168,7 +168,7 @@ ssize_t translate_read(struct file *filp, char __user *buf,
     DEBUG(printk(KERN_NOTICE "translate_read()\n"));
     
     while (numOfCopiedItems < count) {
-        if (down_trylock(&dev->itemsInBuffer) != 0) {
+        if (dev->items == 0) {	// down_trylock(&dev->itemsInBuffer) != 0
 	    DEBUG(printk(KERN_NOTICE "translate_read: buffer empty, read %d chars \n",numOfCopiedItems));
 	    return numOfCopiedItems;
 	}
@@ -182,7 +182,7 @@ ssize_t translate_read(struct file *filp, char __user *buf,
         }
         
         if (copy_to_user(buf, dev->read_pos, 1)) {
-            up(&dev->itemsInBuffer);
+            //up(&dev->itemsInBuffer);
             return -EFAULT;
         }
 
@@ -195,7 +195,7 @@ ssize_t translate_read(struct file *filp, char __user *buf,
         numOfCopiedItems++;
         dev->items--;
 	
-        up(&dev->freeBufferSpace);
+        //up(&dev->freeBufferSpace);
     }
     
     return numOfCopiedItems;
@@ -246,7 +246,7 @@ static int translate_init(void) {
 	// init semaphores
 	sema_init(&dev->reader_open_lock, NUM_SIMULT_ACCESS_USERS);
 	sema_init(&dev->writer_open_lock, NUM_SIMULT_ACCESS_USERS);
-	sema_init(&dev->itemsInBuffer, 0);
+	//sema_init(&dev->itemsInBuffer, 0);
 	sema_init(&dev->freeBufferSpace, translate_bufsize);
 	
 	translate_setup_cdev(&translate_devs[i], i);

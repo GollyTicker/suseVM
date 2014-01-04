@@ -71,8 +71,8 @@ struct translate_dev {
 	struct cdev cdev;// char device
 	struct semaphore writer_open_lock;	// mutex for writing
 	struct semaphore reader_open_lock;	// mutex for reading
-	struct semaphore itemsInBuffer;
-	struct semaphore freeBufferSpace;
+	// struct semaphore itemsInBuffer;
+	// struct semaphore freeBufferSpace;
 };
 
 
