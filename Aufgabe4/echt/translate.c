@@ -12,8 +12,6 @@ static int translate_bufsize = STD_BUFFER_SIZE;
 module_param(translate_subst, charp, S_IRUGO);
 module_param(translate_bufsize, int, S_IRUGO);
 
-// TODO: better naming of Anwendungsfunktionen
-
 void encodeChar(char *write_pos) {
     int index = encodeIndexFromChar(*write_pos);
     if (index != NEUTRAL_CHAR_INDEX) {

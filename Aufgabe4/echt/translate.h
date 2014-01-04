@@ -108,7 +108,7 @@ struct file_operations translate_ops = {
 // Module things
 // Metainformation
 MODULE_AUTHOR("Swaneet Sahoo and Ivan Morozov");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Beer Licence");
 
 // module init and module exit procedures taken from scull
 module_init(translate_init);
