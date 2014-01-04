@@ -1,0 +1,107 @@
+=======================================================================
+
+easier testing:
+
+sudo bash 1:
+$ cat /dev/translate0
+
+
+sudo bash 2:
+$ cat << EOF > /dev/translate0
+> dlkfg
+> skdlf
+> ksjdf
+> EOF
+
+========================================================================
+For setting the module parameters,
+we used this site for help:
+http://www.tldp.org/LDP/lkmpg/2.6/html/x323.html
+
+======================================================================
+
+dev-cycle:
+$ sudo ./load_translate.sh
+// do stuff here
+$ sudo ./unload_translate.sh
+
+use alias rs="sudo bash ./retry.sh" for:
+// do stuff
+$ rs
+// test and do stuff
+$ rs
+// test and do stuff ...
+$ rs
+// etc
+
+
+Ein $ ./showTranslateMod.sh
+überprüft ob das Modul tatsächlich läuft.
+
+===========================================================================
+
+Verwendungsweise:
+(in sudo bash)
+$ echo "erster text" > /dev/translate0
+$ echo "zweiter text" > /dev/translate0
+$ cat /dev/translate0 > /dev/translate1
+$ cat /dev/translate1
+erster text
+zweiter text
+$ 
+
+Wenn man zwischendurch mit cat die gespeicherten Woerter
+ausgeben laesst, dann ist dieser inhalt nicht mehr im modul drinnen,
+und kann daher nicht ein zweites mal gelesen werden. (insbesondere
+kann man des nun nicht mehr in das andere modul umleiten.)
+
+
+===========================================================================
+
+git fix: http://stackoverflow.com/questions/6448242/git-push-error-insufficient-permission-for-adding-an-object-to-repository-datab
+
+sudo chown -R swaneetsusevma4:users *
+
+============================================================================
+
+
+ ======= Hinweis Ueber den Kernelpfad im Makefile ======
+Das Kompillieren funktioniert nicht, da im suse
+anscheinend der Ordner /build in /modules/xx.xx.xx-x.xx nicht
+standardmaessig enthalten war.
+Mit Internetrecherche und einigen Installationen
+konnte dann das Mini-Modul in /try kompillieren und im Kernel laufen.
+Wir haben diesen "bugfix" dann auf unser translate angewendet.
+Es funktioniert nur, wenn man hier manuell
+angibt welchen Kernelordner Linux zu verwenden hat.
+Es ist unklar, wie man dies generisch formulieren koennte.
+
+
+==== sonstiges: =====
+
+http://www.quora.com/openSUSE/What-are-Linux-kernel-headers-and-how-do-I-install-them
+
+es fehlte infrrastruktur in unserem openSuse linux.
+
+hierher haben wir es dann nachgeladen.
+
+$ sudo zypper install linux-kernel-headers
+$ sudo zypper in -t pattern devel_kernel
+
+aber zu wenig platz.....
+
+
+
+also habe die vm nochmal mit 20 GB statt nur 8 GB
+massenspeicher neu gemacht.
+
+nach der installatin funktioniert es leider niucht
+mit dem generischen $(uname -r).
+Dort ist nachwievor kein /build ordner vorhanden.
+
+jedoch wenn man manuell diesen pfad verwendet,
+funktioniert das kompillieren:
+"3.7.10-1.24-default"
+Dieser Pfad steht also nun im Makefile drinnen.
+
+
