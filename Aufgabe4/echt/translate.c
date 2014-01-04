@@ -133,7 +133,7 @@ ssize_t translate_write(struct file *filp, const char __user *buf,
         
         // if we're the translate0 device
         // then encode during writing from user into device
-        if (MINOR(dev->cdev.dev)== MINOR_BEGINNING) {
+        if (MINOR(dev->cdev.dev) == MINOR_BEGINNING) {
             encodeChar(dev->write_pos);
         }
         
@@ -177,13 +177,13 @@ ssize_t translate_read(struct file *filp, char __user *buf,
 	// we'll decode our buffer (if translate1) and THEN hand it over to the user.
         
         // if the device is translate1, then decode
-        if (MINOR(dev->cdev.dev) == 1) {
+        if (MINOR(dev->cdev.dev) == (MINOR_BEGINNING + 1)) {
             decodeChar(dev->read_pos);
         }
         
         if (copy_to_user(buf, dev->read_pos, 1)) {
-            return -EFAULT;
             up(&dev->itemsInBuffer);
+            return -EFAULT;
         }
 
         // update pointers
