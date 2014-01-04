@@ -239,8 +239,6 @@ static int translate_init(void) {
 	// init semaphores
 	sema_init(&dev->reader_open_lock, NUM_SIMULT_ACCESS_USERS);
 	sema_init(&dev->writer_open_lock, NUM_SIMULT_ACCESS_USERS);
-	//sema_init(&dev->itemsInBuffer, 0);
-	//sema_init(&dev->freeBufferSpace, translate_bufsize);
 	
 	translate_setup_cdev(&translate_devs[i], i);
 	DEBUG(printk(KERN_NOTICE "translate_init: translate dev %d initialized", i));
