@@ -2,8 +2,8 @@
 module="translate"
 device="translate"
 
-# Remove translate modules (Abort on failure)
-/sbin/rmmod $module $* || exit 1
+# Remove translate modules
+/sbin/rmmod $module $*
 
 # Remove corresponding nodes
 rm -f /dev/${device}[0-1] 
