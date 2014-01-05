@@ -56,8 +56,6 @@
 #define DEBUG(A) printk(KERN_NOTICE "<translate>:");A
 #endif
 
-// USAGE: TODO
-
 #ifndef DEBUG_MESSAGES
 #define DEBUG(A) 
 #endif
@@ -88,10 +86,10 @@ static void translate_setup_cdev(struct translate_dev *dev, int index);
 static void cleanup_single_translate_dev(int i);  // cleanup the device of the given index
 
 // Echte Anwendungsfunktionen
-int encodeIndexFromChar(char c);
-void encodeChar(char *write_pos);
-char decodeFromIndex(int index);
-void decodeChar(char *read_pos);
+int encode_index_from_char(char c);
+void encode_char(char *write_pos);
+char decode_from_index(int index);
+void decode_char(char *read_pos);
 
 
 // file_operations interface implementieren
