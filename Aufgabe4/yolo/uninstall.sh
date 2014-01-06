@@ -1,12 +1,12 @@
 #!/bin/sh
-module="translate"
-device="translate"
+modulename="translate"
+deviceprefix="translate"
 
-# Remove translate modules (Abort on failure)
+#Entfernen des Moduls. Exit mit Fehler, falls nicht erfolgreich.
 /sbin/rmmod $module $* || exit 1
 
-# Remove corresponding nodes
+#Entfernen der Devicenodes
 rm -f /dev/${device}[0-1] 
 
-# Remove compilations files
+#Clean
 make clean

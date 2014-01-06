@@ -1,308 +1,314 @@
 #include "translate.h"
 
-// global variables 
-int translate_major;    // recieved major number
-struct translate_dev *translate_devs;    // translate device
+    //Parameter
+static char *tl_subst = TL_DEFAULT_SUBSTR;
+static int tl_buffersize = TL_BUFFERSIZE;
 
-// translate parameters (and default values)
-static char *translate_subst = STD_TRANSLATE_SUBSTR;
-static int translate_bufsize = STD_BUFFER_SIZE;
+    //Modulparameter
+module_param(tl_subst, charp, S_IRUGO);
+module_param(tl_buffersize, int, S_IRUGO);
 
-// make variables into module params
-module_param(translate_subst, charp, S_IRUGO);
-module_param(translate_bufsize, int, S_IRUGO);
+    //Erhaltene major number
+int tl_majornumber;
+    //Erhaltene devices
+struct tl_device *devices;
 
-void encodeChar(char *write_pos) {
-    int index = encodeIndexFromChar(*write_pos);
-    if (index != NEUTRAL_CHAR_INDEX) {
-        *write_pos = translate_subst[index];
+    //Encoding des chars auf den der Pointer zeigt
+void encode(char *plain)
+{
+    if (IS_NOT_TO_BE_ENCODED(*plain))
+    {
+        return;
     }
+    *plain = tl_subst[CHIFFRE_INDEX(*plain)];
+}
+    //Decoding des chars auf den der Pointer zeigt
+void decode(char *cipher)
+{
+    if (IS_NOT_TO_BE_ENCODED(*cipher))
+    {
+        return;
+    }
+    *cipher = CHAR_FOR_CHIFFRE_INDEX(strchr(tl_subst, *cipher));
 }
 
-void decodeChar(char *read_pos) {
-    char * pchar = strchr(translate_subst, *read_pos);
-    // if the char was found in substr (aka, had been encoded)
-    if (pchar != NULL) {
-	// then get the original char according to
-	// the position of the finding
-	
-	// calc the index using both pointers
-        int index = pchar - translate_subst;
-	*read_pos = decodeFromIndex(index);
-    }
-}
+    //Open operation aus scull
+int tl_open(struct inode *inode, struct file *filp)
+{
+    struct tl_device *device;
 
-char decodeFromIndex(int index) {
-    if( IS_IN_LOWER_CASE_SUBSTR(index) ) {
-	return (LOWER_CASE_ASCII + (index -LOWER_CASE_SUBSTR_OFFSET));
-    }
-    else {
-	return (UPPER_CASE_ASCII + (index - UPPER_CASE_SUBSTR_OFFSET));
-    }
-}
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_open\n"));
 
-int encodeIndexFromChar(char c) {
-    int result = NEUTRAL_CHAR_INDEX;
-    if (IS_UPPER_CASE(c)) {
-        result = c - UPPER_CASE_ASCII + UPPER_CASE_SUBSTR_OFFSET;
-    } else if (IS_LOWER_CASE(c)) {
-        result = c - LOWER_CASE_ASCII + LOWER_CASE_SUBSTR_OFFSET;
-    }
-    return result;
-}
+        //Erhalte einen Pointer auf das Device.
+    device = container_of(inode->i_cdev, struct tl_device, cdev);
+    filp->private_data = device;
 
-// open operation (taken from scull)
-int translate_open(struct inode *inode, struct file *filp) {
-    struct translate_dev *dev = container_of(inode->i_cdev, struct translate_dev, cdev);
-    // makes a pointer to the device from a 'complicated' inode
-    filp->private_data = dev;
-    
-    DEBUG(printk(KERN_NOTICE "translate_open()\n"));
-    
-    // we check whether the user is in write or read mode.
-    // then we try to access the corresponding part of the device
-    // if the device is free for writing/reading
-    if( (filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
-	// try to access the device. for that we try to decrease the
-	// semaphore value. If we succeed, we may use it.
-	// else we say, that the device is busy.
-        if (down_trylock(&dev->writer_open_lock) != 0) {
-            DEBUG(printk(KERN_NOTICE "translate_open: device already being written onto.\n"));
-            return -EBUSY;
-        }
-    } else {
-	// same goes for reading
-        if (down_trylock(&dev->reader_open_lock) != 0) {
-            DEBUG(printk(KERN_NOTICE "translate_open: device already being read from.\n"));
-            return -EBUSY;
-        }
+        //Abhängig vom Modus des Users, dekrementiere den Wert der entsprechenden Semaphore.
+    int result;
+    if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE)
+    {
+        result = down_trylock(&device->openLockWriting);
+    }
+    else
+    {
+        result = down_trylock(&device->openLockReading);
+    }
+
+        //Falls nicht erfolgreich, gebe busy zurück.
+    if (result!= 0)
+    {
+        DEBUG_LOG(printk(KERN_NOTICE "In tl_open: Device is already in use.\n"));
     }
     
     return EXIT_SUCCESS;
 }
 
-// close file operation.
-// simply check which mode the user was in and decrease the corresponding
-// semaphore. this then allows others to read/write
-int translate_close(struct inode *inode, struct file *filp) {
-    struct translate_dev *dev = filp->private_data;
+    //Release operation
+int tl_release(struct inode *inode, struct file *filp)
+{
+    struct tl_device *device = filp->private_data;
     
-    DEBUG(printk(KERN_NOTICE "translate_close()\n"));
-    
-    if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE) {
-        
-        up(&dev->writer_open_lock);
-    } else {
-        up(&dev->reader_open_lock);
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_release\n"));
+
+    //Abhängig vom Modus des Users, inkrementiere den Wert der entsprechenden Semaphore.
+    if ((filp->f_mode & FMODE_WRITE) == FMODE_WRITE)
+    {
+        up(&device->openLockWriting);
+    }
+    else
+    {
+        up(&device->openLockReading);
     }
     return EXIT_SUCCESS;
 }
 
-// implementation of what happens when someone now wants to write
-// into our device. we got much help form others groups here.
-ssize_t translate_write(struct file *filp, const char __user *buf,
-			size_t count, loff_t *f_pos) {
-    struct translate_dev *dev = filp->private_data;
-    
-    // position of the writer on the buffer
-    // it abstracts from the type char
-    int writerPos = (dev->write_pos - dev->buffer) / sizeof(char);
-    
-    int numOfCopiedItems = 0;	// tracks the progress of the # of copied items
-    
-    DEBUG(printk(KERN_NOTICE "translate_write()\n"));
-    
-    while (numOfCopiedItems < count) {
-	// decrease the semaphore
-	// if the buffer is full, this fails.
-	if (down_trylock(&dev->freeBufferSpace) != 0) {
-	    DEBUG(printk(KERN_NOTICE "translate_write: buffer is full. copied %d items \n",numOfCopiedItems));
-	    return numOfCopiedItems;
-	}
-	
-        // at this point, the buffer isnt full and
-        // there are still items to be copied.
-        
-        // now copy a single character from the user
-        if (copy_from_user(dev->write_pos, buf, 1)){
-                DEBUG(printk(KERN_NOTICE "translate_write: copy_from_user failed \n"));
-		// free semaphore again and end
-		up(&dev->freeBufferSpace);
+    //Schreibzugriff
+ssize_t tl_write(struct file *filp, const char __user *buf,
+			size_t count, loff_t *f_pos)
+{
+    struct tl_device *device = filp->private_data;
+
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_write\n"));
+
+        //Die Schreibposition im Buffer, in chars
+    int writePosition = (device->writePointer - device->buffer) / sizeof(char);
+
+        //Anzahl der bisher kopierten chars
+    int alreadyCopied = 0;
+
+        //Solange weniger chars kopiert sind, als gefordert:
+    while (alreadyCopied < count)
+    {
+            //Dekrementiere die Semaphore für freien Buffer.
+        if (down_trylock(&device->freeBuffer) != 0)
+        {
+                //Falls dies nicht geht, ist der Buffer voll. Gebe die Anzahl der kopierten chars zurück.
+            DEBUG_LOG(printk(KERN_NOTICE "In tl_write: Buffer is full. Already copied: %d\n",alreadyCopied));
+            return alreadyCopied;
+        }
+
+            //Kopiere einen char in den buffer. Da im kernel space, wird copy_from_user benötigt
+        unsigned long result = copy_from_user(device->writePointer, buf, 1) != 0
+        if (result != 0)
+        {
+                //Falls dies fehlschlägt, inkrementiere die Semaphore wieder und gebe fault zurück.
+            DEBUG_LOG(printk(KERN_NOTICE "In tl_write: %d chars could not be copied.\n", result));
+            up(&device->freeBuffer);
                 return -EFAULT;
         }
-        
-        // if we're the translate0 device
-        // then encode during writing from user into device
-        if (MINOR(dev->cdev.dev) == MINOR_BEGINNING) {
-            encodeChar(dev->write_pos);
+
+            //Als Device 0, encode beim Schreiben.
+        if (MINOR(device->cdev.dev) == MINORNUMBER_MIN)
+        {
+            encode(device->writePointer);
         }
-        
-        // now that we've succesfully copied (encoded)
-        // a char, we increment all loop-dependent-variables.
-        
-        // update pointers
-        dev->write_pos = dev->buffer + ((writerPos + 1) % translate_bufsize)* sizeof(char);
-        writerPos = (dev->write_pos - dev->buffer) / sizeof(char);
+            //Inkrementiere die Position im Buffer (Ring).
+        device->writePointer = device->buffer + ((writePosition + 1) % tl_buffersize) * sizeof(char);
+            //Erhalte die neue Schreibposition
+        writePosition = (device->writePointer - device->buffer) / sizeof(char);
+            //TODO
         buf += sizeof(char);
+
+        alreadyCopied++;
+        device->bufferContent++;
 	
-	// update counters
-        numOfCopiedItems++;
-	dev->items++;
-	
-	// now that we've copied an item
-        up(&dev->itemsInBuffer);
+            //Inkrementiere die Semaphore für den Bufferinhalt
+        up(&device->filledBuffer);
     }
 
-    return numOfCopiedItems;
+    return alreadyCopied;
 }
 
-// implementation of what happens when someone now wants to read
-// into our device. we got much help form others groups here.
-// this is very similar to the write process
-ssize_t translate_read(struct file *filp, char __user *buf,
-		       size_t count,loff_t *f_pos) {
-    struct translate_dev *dev = filp->private_data;
-    int numOfCopiedItems = 0;
-    int readerPos = (dev->read_pos - dev->buffer) / sizeof(char);
+    //Lesezugriff
+ssize_t tl_read(struct file *filp, char __user *buf,
+		       size_t count,loff_t *f_pos)
+{
+    struct tl_device *device = filp->private_data;
 
-    DEBUG(printk(KERN_NOTICE "translate_read()\n"));
-    
-    while (numOfCopiedItems < count) {
-        if (down_trylock(&dev->itemsInBuffer) != 0) {
-	    DEBUG(printk(KERN_NOTICE "translate_read: buffer empty, read %d chars \n",numOfCopiedItems));
-	    return numOfCopiedItems;
-	}
-	
-	// because we're got the information now and the user want to read them
-	// we'll decode our buffer (if translate1) and THEN hand it over to the user.
-        
-        // if the device is translate1, then decode
-        if (MINOR(dev->cdev.dev) == (MINOR_BEGINNING + 1)) {
-            decodeChar(dev->read_pos);
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_read\n"));
+
+        //Die Leseposition im Buffer, in chars
+    int readPosition = (device->readPointer - device->buffer) / sizeof(char);
+
+        //Anzahl der bisher kopierten chars
+    int alreadyCopied = 0;
+
+        //Solange weniger chars kopiert sind, als gefordert:
+    while (alreadyCopied < count)
+    {
+            //Dekrementiere die Semaphore für chars im Buffer.
+        if (down_trylock(&device->filledBuffer) != 0)
+        {
+                //Falls dies nicht geht, ist der Buffer leer. Gebe die Anzahl der kopierten chars zurück.
+            DEBUG_LOG(printk(KERN_NOTICE "In tl_read: Buffer is empty. Already copied: %d\n",alreadyCopied));
+            return alreadyCopied;
         }
-        
-        if (copy_to_user(buf, dev->read_pos, 1)) {
-            up(&dev->itemsInBuffer);
+
+            //Als Device 1, decode beim Lesen.
+        if (MINOR(device->cdev.dev) == (MINORNUMBER_MIN + 1))
+        {
+            decode(dev->readPointer);
+        }
+
+            //Kopiere einen char aus dem buffer. Da aus kernel space, wird copy_to_user benötigt
+        unsigned long result = copy_to_user(buf, device->readPointer, 1)
+        if (result != 0)
+        {
+                //Falls dies fehlschlägt, inkrementiere die Semaphore wieder und gebe fault zurück.
+            DEBUG_LOG(printk(KERN_NOTICE "In tl_write: %d chars could not be copied.\n", result));
+            up(&device->filledBuffer);
             return -EFAULT;
         }
 
-        // update pointers
-        dev->read_pos = dev->buffer + ((readerPos + 1) % translate_bufsize)* sizeof(char);
-        readerPos = (dev->read_pos - dev->buffer) / sizeof(char);
+            //Inkrementiere die Position im Buffer (Ring).
+        device->readPointer = device->buffer + ((readPosition + 1) % tl_buffersize) * sizeof(char);
+            //Erhalte die neue Leseposition.
+        readPosition = (dev->readPointer - dev->buffer) / sizeof(char);
         buf += sizeof(char);
-	
-	// update counters
-        numOfCopiedItems++;
-        dev->items--;
-	
-        up(&dev->freeBufferSpace);
+
+        alreadyCopied++;
+        dev->bufferContent--;
+
+            //Inkrementiere die Semaphore für freien Buffer.
+        up(&device->freeBuffer);
     }
     
-    return numOfCopiedItems;
+    return alreadyCopied;
 }
 
-// called from kernel to initialize translate module. taken from scull
-static int translate_init(void) {
-    int result = EXIT_SUCCESS, i;
+    //Wird vom Kernel zum Initialisieren des Moduls aufgerufen.
+static int tl_init(void)
+{
+    int result, i;
     dev_t dev;
     
-    DEBUG(printk(KERN_NOTICE "translate_init()\n"));
-    DEBUG(printk(KERN_NOTICE "translate_init: param subst = %s \n",translate_subst));
-    DEBUG(printk(KERN_NOTICE "translate_init: param bufsize = %d \n",translate_bufsize));
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_init\n"));
     
-    result = alloc_chrdev_region(&dev, MINOR_BEGINNING, NO_OF_DEVICES,"translate\n");
-    translate_major = MAJOR(dev);
+    result = alloc_chrdev_region(&dev, MINORNUMBER_MIN, DEVICE_COUNT,"translate\n");
+    tl_majornumber = MAJOR(dev);
 
-    if (result != EXIT_SUCCESS) {
-	DEBUG(printk(KERN_ALERT "translate_init: error(%d) getting major %d \n",
-		result, translate_major));
-	return result;
+    if (result != EXIT_SUCCESS)
+    {
+        DEBUG_LOG(printk(KERN_ALERT "In tl_init: Can't get major number %d \n",
+		result, tl_majornumber));
+        return result;
     }
 
-    // allocate memory for the devices
-    translate_devs = kmalloc(NO_OF_DEVICES * sizeof(struct translate_dev),GFP_KERNEL);
-    if (!translate_devs) {
+        //Allokiere Speicher für die devices.
+    devices = kmalloc(DEVICE_COUNT * sizeof(struct tl_device),GFP_KERNEL);
+    if (!devices)
+    {
         result = -ENOMEM;
-	goto fail;
+            //We refused to make this more graceful
+        goto fail;
     }
-    
-    // reset contents of device
-    memset(translate_devs, 0, NO_OF_DEVICES * sizeof(struct translate_dev));
+    memset(devices, 0, DEVICE_COUNT * sizeof(struct tl_device));
 
-    // initialize each device (in translate its only two)
-    for (i = 0; i < NO_OF_DEVICES; i++) {
-	struct translate_dev *dev = &translate_devs[i];
-	// allocate buffer (just like with the device memory)
-	dev->buffer = kmalloc(translate_bufsize, GFP_KERNEL);
-	if (!(dev->buffer)) {
-	    result = -ENOMEM;
-	    goto fail;
-	}
+        //Initialisieren der Devices
+    for (i = 0; i < DEVICE_COUNT; i++)
+    {
+        struct tl_device *dev = &devices[i];
+            //Allokiere Speicher für die Buffer der Devices.
+        dev->buffer = kmalloc(translate_bufsize, GFP_KERNEL);
+        if (!(dev->buffer))
+        {
+            result = -ENOMEM;
+            goto fail;
+        }
+
+            //Am Anfang ist der Buffer leer, Lese- und Schreibposition sind am Anfang
+        dev->bufferContent = 0;
+        dev->readPointer = dev->buffer;
+        dev->writePointer = dev->buffer;
+
+            //Initialisierung der Semaphoren
+        sema_init(&dev->filledBuffer, 0);
+        sema_init(&dev->freeBuffer, tl_buffersize);
+        sema_init(&dev->openLockReading, 1);
+        sema_init(&dev->openLockWriting, 1);
 	
-	dev->items = 0;
-	dev->read_pos = dev->buffer;
-	dev->write_pos = dev->buffer;
-	
-	// init semaphores
-	sema_init(&dev->reader_open_lock, NUM_SIMULT_ACCESS_USERS);
-	sema_init(&dev->writer_open_lock, NUM_SIMULT_ACCESS_USERS);
-	sema_init(&dev->itemsInBuffer, 0);
-	sema_init(&dev->freeBufferSpace, translate_bufsize);
-	
-	translate_setup_cdev(&translate_devs[i], i);
-	DEBUG(printk(KERN_NOTICE "translate_init: translate dev %d initialized", i));
+        tl_setup_cdev(&devices[i], i);
+        DEBUG_LOG(printk(KERN_NOTICE "In tl_init: Device %d was initialized", i));
     }
     
-    DEBUG(printk(KERN_NOTICE "translate_init: translate initialized"));
+    DEBUG_LOG(printk(KERN_NOTICE "In tl_init: All devices were initialized"));
     
     return EXIT_SUCCESS;
 
-    fail: translate_cleanup();
+    fail: tl_cleanup();
     return result;
 }
 
-// setup char device (taken form scull)
-static void translate_setup_cdev(struct translate_dev *dev, int index) {
-    int result = EXIT_SUCCESS, devno = MKDEV(translate_major, MINOR_BEGINNING + index);
+    //Setup der char_dev structure aus scull
+static void tl_setup_cdev(struct tl_device *dev, int index)
+{
+    int result;
+
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_setup_cdev\n"));
+
+    int devno = MKDEV(tl_majornumber, MINORNUMBER_MIN + index);
     
-    DEBUG(printk(KERN_NOTICE "translate_setup_cdev()\n"));
-    
-    cdev_init(&dev->cdev, &translate_ops);
+    cdev_init(&dev->cdev, &tl_operations);
     dev->cdev.owner = THIS_MODULE;
-    dev->cdev.ops = &translate_ops;
+    dev->cdev.ops = &tl_operations;
     
     result = cdev_add(&dev->cdev, devno, 1);
 
-    if (result) {
-        DEBUG(printk(KERN_NOTICE "Error(%d): adding translate dev %d \n", result, index));
+    if (result)
+    {
+            //Even more graceful
+        DEBUG_LOG(printk(KERN_NOTICE "In tl_setup_cdev: (Error %d) Couldn't add device %d\n", result, index));
     }
 }
 
-// cleanup procedure. taken from scull
-static void translate_cleanup(void) {
-    dev_t dev = MKDEV(translate_major, MINOR_BEGINNING);
+    //Cleanup für ein einzelnes Device
+static void tl_cleanup_device(int index)
+{
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_cleanup_device\n"));
+
+    struct tl_device *device = &(devices[index]);
+    kfree(device->buffer);
+    cdev_del(&device->cdev);
+    DEBUG_LOG(printk(KERN_NOTICE "In tl_cleanup_device: Cleaned up device %d\n", index));
+}
+
+    //Cleanup aus scull. Wird auch bei Initialisierungsfehlern aufgerufen
+static void tl_cleanup(void)
+{
     int i;
-    DEBUG(printk(KERN_NOTICE "translate_cleanup()\n"));
-    if (translate_devs != NULL) {
-        for (i = 0; i < NO_OF_DEVICES; i++) {
-	    cleanup_single_translate_dev(i);
+
+    DEBUG_LOG(printk(KERN_NOTICE "Entering tl_cleanup\n"));
+
+    dev_t devno = MKDEV(tl_majornumber, MINORNUMBER_MIN);
+
+    if (devices)
+    {
+        for (i = 0; i < DEVICE_COUNT; i++)
+        {
+            tl_cleanup_device(i);
         }
-        // free device memory
-        kfree(translate_devs);
+        kfree(devices);
     }
-    unregister_chrdev_region(dev, NO_OF_DEVICES);
-}
-
-
-static void cleanup_single_translate_dev(int i) {
-    struct translate_dev *dev = &(translate_devs[i]);
-    // free Buffer
-    kfree(dev->buffer);
-    // reset pointers
-    dev->read_pos = NULL;
-    dev->write_pos = NULL;
-    dev->buffer = NULL;
-    // delete char dev
-    cdev_del(&dev->cdev);
-    DEBUG(printk(KERN_NOTICE "translate_cleanup: kfree'd translate dev %d\n", i));
+        //Wenn tl_cleanup gecalled wurde, war das Registrieren schon erfolgreich, unregistriere.
+    unregister_chrdev_region(dev, DEVICE_COUNT);
 }
