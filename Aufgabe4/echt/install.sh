@@ -25,7 +25,7 @@ buf=40
 # Das meiste in dieser Datei kommt aus dem dritten Kapitel,
 # indem die Installation erklärt wird.
 
-# Hinzufuegen des Kernelmoduls
+# Hinzufuegen des Kernelmoduls (Abbruch bei Misserfolg)
 /sbin/insmod ./$module.ko translate_subst=$subst translate_bufsize=$buf $* || exit 1
 # Aufruf ohne Parameter (ein oder auskommentieren)
 # /sbin/insmod ./$module.ko $* || exit 1
