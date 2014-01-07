@@ -1,7 +1,7 @@
 #!/bin/sh
 module="translate"	# Name des Moduls
 device="translate"	# Prefix der beiden Devices
-mode="664"
+mode="666"		# auch fuer Normalbenutzer
 
 # compillieren des Moduls (Abbruch, falls nicht erfolgreich)
 make || exit 1
@@ -14,13 +14,13 @@ make || exit 1
 # subst="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 # Fohl:
-subst="zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDBCA"
+# subst="zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDBCA"
 
 # Rot 5:
-# subst="fghijklmnopqrstuvwxyzabcdeFGHIJKLMNOPQRSTUVWXYZABCDE"
+subst="fghijklmnopqrstuvwxyzabcdeFGHIJKLMNOPQRSTUVWXYZABCDE"
 
 # Buffersize
-buf=12
+buf=40
 
 # Das meiste in dieser Datei kommt aus dem dritten Kapitel,
 # indem die Installation erklärt wird.
