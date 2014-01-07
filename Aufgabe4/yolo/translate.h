@@ -1,118 +1,95 @@
 #ifndef TRANSLATE_H_
 #define TRANSLATE_H_
 
-// aus dem scull-main
+    //Die folgenden zwei Absätze sind aus sculls main.c übernommen
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
-#include <linux/kernel.h>       // printk()
-#include <linux/slab.h>         // kmalloc()
-#include <linux/fs.h>           // vieles...
-#include <linux/errno.h>        // error codes
-#include <linux/types.h>        // size_t
-#include <linux/fcntl.h>	// file operations
-#include <linux/cdev.h>         // cdev
-#include <linux/kdev_t.h>	// dev_t
-#include <asm/uaccess.h>	// copy_from_user()
-#include <linux/string.h>       // strchr(), strlen()
 
-// Translate DEFINE
-// standardmaessig ist der Buffer 40
-#define STD_BUFFER_SIZE 40
+#include <linux/kernel.h>	/* printk() */
+#include <linux/slab.h>		/* kmalloc() */
+#include <linux/fs.h>		/* everything... */
+#include <linux/errno.h>	/* error codes */
+#include <linux/types.h>	/* size_t */
+#include <linux/proc_fs.h>
+#include <linux/fcntl.h>	/* O_ACCMODE */
+#include <linux/seq_file.h>
+#include <linux/cdev.h>
 
-// der default translate substring
-#define STD_TRANSLATE_SUBSTR "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"    //standard subst
-#define TRANSLATE_SUBSTR_LEN (strlen(translate_subst))
+    //Für verschiedene Hilfsfunktionen
+#include <linux/kdev_t.h>
+#include <asm/uaccess.h>
+#include <linux/string.h>
 
-// die minor nummern beginnen ab 0
-#define MINOR_BEGINNING 0
+    //Die default-Einstellungen
+#define TL_BUFFERSIZE 40
+#define TL_DEFAULT_SUBST
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-// wir haben die devices translate0 und translate1
-#define NO_OF_DEVICES 2
+    //Es gibt zwei Devices, minor number startet bei 0
+#define DEVICE_COUNT 2
+#define MINORNUMBER_MIN 0
 
-// helper macros
-#define IS_LOWER_CASE(c) ((c) >= 'a' && (c) <= 'z')
-#define IS_UPPER_CASE(c) ((c) >= 'A' && (c) <= 'Z')
+    //Helfermakros für Ver- und Entschlüsseln
+#define LOWERCASE_START 'a'
+#define LOWERCASE_END 'z'
+#define LOWERCASE_LENGTH (LOWERCASE_END - LOWERCASE_START + 1)
+#define UPPERCASE_START 'A'
+#define UPPERCASE_END 'Z'
+#define LOWERCASE(C) ((C) >= LOWERCASE_START && (C) <= LOWERCASE_END)
+#define UPPERCASE(C) ((C) >= LOWERCASE_START && (C) <= UPPERCASE_END)
+#define CHIFFRE_INDEX(C) ((LOWERCASE(C)) ? ((C) - LOWERCASE_START) : ((C) - UPPERCASE_START + LOWERCASE_LENGTH))
+#define CHAR_FOR_CHIFFRE_INDEX(C) (((C) < LOWERCASE_LENGTH) ? ((C) + LOWERCASE_START) : ((C) - LOWERCASE_LENGTH + UPPERCASE_START))
+#define IS_NOT_TO_BE_ENCODED(C) (!(LOWERCASE(C)) && !(UPPERCASE(C))
 
-// only one user may use a devices read/write 'port' at a time
-#define NUM_SIMULT_ACCESS_USERS 1
-
-// offset for lower case characters
-#define LOWER_CASE_ASCII 'a'
-#define UPPER_CASE_ASCII 'A'
-
-// the encoding for lower case chars being at 0
-// the encoding for upper case chars begins at the middle
-#define LOWER_CASE_SUBSTR_OFFSET 0
-#define UPPER_CASE_SUBSTR_OFFSET (TRANSLATE_SUBSTR_LEN/2)
-#define IS_IN_LOWER_CASE_SUBSTR(A) ((A) >= LOWER_CASE_SUBSTR_OFFSET && (A) < UPPER_CASE_SUBSTR_OFFSET)
-
-// misc
-#define EXIT_SUCCESS 0
-#define NEUTRAL_CHAR_INDEX -1
-
-// for debugging
+    //Debugausgaben mit Präfix
 #ifdef DEBUG_MESSAGES
-#define DEBUG(A) printk(KERN_NOTICE "<translate>:");A
+#define DEBUG_LOG(E) printk(KERN_NOTICE "In translate: ");E
+#else
+#define DEBUG_LOG(E) ()
 #endif
 
-// USAGE: TODO
-
-#ifndef DEBUG_MESSAGES
-#define DEBUG(A) 
-#endif
-
-// each of our devices have this
-struct translate_dev {
-	char *buffer;	// pointer to the buffer
-	int items;	// # of items
-	char *read_pos;	// current reading position
-	char *write_pos;// current writing position
-	struct cdev cdev;// char device
-	struct semaphore writer_open_lock;	// mutex for writing
-	struct semaphore reader_open_lock;	// mutex for reading
-	struct semaphore itemsInBuffer;
-	struct semaphore freeBufferSpace;
+    //Struct für ein Device
+struct tl_device {
+        //Position des Buffers
+	char *buffer;
+	int bufferContent;
+    struct semaphore freeBuffer;
+	struct semaphore filledBuffer;
+    struct semaphore openLockWriting;
+	struct semaphore openLockReading;
+	char *readPointer;
+    char *writePointer;
+	struct cdev cdev;
 };
 
+    //Ver- und Entschlüsseln
+void encode(char *plain);
+void decode(char *cipher);
 
-// Translate fileoperations (auch aus scull ueberneommen)
-int translate_open(struct inode *inode, struct file *filp);
-int translate_close(struct inode *inode, struct file *filp);
-ssize_t translate_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos);
-ssize_t translate_read(struct file *filp, char __user *buf, size_t count,loff_t *f_pos);
+    //Dateioperationen aus scull
+int tl_open(struct inode *inode, struct file *filp);
+int tl_release(struct inode *inode, struct file *filp);
+ssize_t tl_write(struct file *filp, const char __user *buf, size_t count, loff_t *f_pos);
+ssize_t tl_read(struct file *filp, char __user *buf, size_t count,loff_t *f_pos);
 
+    //Setup, modifiziert aus scull
+static int tl_init(void);
+static void tl_cleanup(void);
+static void tl_cleanup_device(int i);
+static void tl_setup_cdev(struct translate_dev *dev, int index);
 
-// Install/Uninstall (oriented on scull)
-static int translate_init(void);
-static void translate_cleanup(void);
-static void translate_setup_cdev(struct translate_dev *dev, int index);
-static void cleanup_single_translate_dev(int i);  // cleanup the device of the given index
-
-// Echte Anwendungsfunktionen
-int encodeIndexFromChar(char c);
-void encodeChar(char *write_pos);
-char decodeFromIndex(int index);
-void decodeChar(char *read_pos);
-
-
-// file_operations interface implementieren
-struct file_operations translate_ops = {
+    //Interface für Dateioperationen
+struct file_operations tl_operations = {
     .owner = THIS_MODULE,
-    .open  = translate_open,
-    .release = translate_close,
-    .write = translate_write,
-    .read  = translate_read
+    .open  = tl_open,
+    .release = tl_release,
+    .write = tl_write,
+    .read  = tl_read
 };
 
-// Module things
-// Metainformation
-MODULE_AUTHOR("Swaneet Sahoo and Ivan Morozov");
-MODULE_LICENSE("Beer Licence");
-
-// module init and module exit procedures taken from scull
-module_init(translate_init);
-module_exit(translate_cleanup);
-
+    //Modulsetup aus scull
+module_init(tl_init);
+module_exit(tl_cleanup);
 
 #endif
