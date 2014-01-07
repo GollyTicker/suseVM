@@ -8,19 +8,19 @@ make || exit 1
 
 # Translate String
 # Neutral:
-#subst= "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# subst= "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 # Groß <-> Klein:
-#subst="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+# subst="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 # Fohl:
 subst="zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDBCA"
 
 # Rot 5:
-#subst="fghijklmnopqrstuvwxyzabcdeFGHIJKLMNOPQRSTUVWXYZABCDE"
+# subst="fghijklmnopqrstuvwxyzabcdeFGHIJKLMNOPQRSTUVWXYZABCDE"
 
 # Buffersize
-buf=40
+buf=12
 
 # Das meiste in dieser Datei kommt aus dem dritten Kapitel,
 # indem die Installation erklärt wird.
