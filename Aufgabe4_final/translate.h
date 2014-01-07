@@ -1,3 +1,10 @@
+/* translate.h
+ * BSP Gruppe 1
+ * Sahoo, Morozov
+ *
+ * The header for the translate Module
+ */
+
 #ifndef TRANSLATE_H_
 #define TRANSLATE_H_
 

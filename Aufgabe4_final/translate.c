@@ -1,3 +1,11 @@
+/* translate.c
+ * BSP Gruppe 1
+ * Sahoo, Morozov
+ *
+ * The translate Module
+ */
+
+
 #include "translate.h"
 
 // global variables 
