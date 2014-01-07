@@ -1,7 +1,7 @@
-linux-mkoi:/ # echo "We're all some1 else to some1 else." > /dev/translate0
-linux-mkoi:/ # cat /dev/translate0 > /dev/translate1
-linux-mkoi:/ # cat /dev/translate1
+$ echo "We're all some1 else to some1 else." > /dev/translate0
+$ cat /dev/translate0 > /dev/translate1
+$ cat /dev/translate1
 We're all some1 else to some1 else.
-linux-mkoi:/ # echo "We're all some1 else to some1 else." > /dev/translate0
-linux-mkoi:/ # cat /dev/translate0
+$ echo "We're all some1 else to some1 else." > /dev/translate0
+$ cat /dev/translate0
 Dv'iv zoo hlnv1 vohv gl hlnv1 vohv.
