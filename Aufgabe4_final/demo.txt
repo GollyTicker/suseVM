@@ -1,4 +1,3 @@
-
 Mit subst="zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDBCA"
 $ echo "We're all some1 else to some1 else." > /dev/translate0
 $ cat /dev/translate0 > /dev/translate1
@@ -10,6 +9,7 @@ Dv'iv zoo hlnv1 vohv gl hlnv1 vohv.
 
 
 Ohne uebergebenen substr-Parameter: (Dann werden Groß und Klein vertauscht.)
-linux-mkoi:/ # echo "We're all some1 else to some1 else." > /dev/translate0
-linux-mkoi:/ # cat /dev/translate0
+$ echo "We're all some1 else to some1 else." > /dev/translate0
+$ cat /dev/translate0
 wE'RE ALL SOME1 ELSE TO SOME1 ELSE.
+
